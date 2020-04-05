@@ -753,6 +753,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="menu_action_validate_seed_after"/>
     <addaction name="menu_action_timeout_generation_after_a_time_limit"/>
+    <addaction name="menu_action_open_dolphin_hook"/>
    </widget>
    <addaction name="menu_open"/>
    <addaction name="menu_edit"/>
@@ -813,6 +814,11 @@ p, li { white-space: pre-wrap; }
   <action name="menu_action_item_tracker">
    <property name="text">
     <string>STB's Item Tracker</string>
+   </property>
+  </action>
+  <action name="menu_action_open_dolphin_hook">
+   <property name="text">
+    <string>Open Dolphin Hook</string>
    </property>
   </action>
  </widget>

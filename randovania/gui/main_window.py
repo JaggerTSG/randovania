@@ -110,6 +110,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, WindowManager, BackgroundTaskMixin)
         self.menu_action_edit_existing_database.triggered.connect(self._open_data_editor_prompt)
         self.menu_action_validate_seed_after.triggered.connect(self._on_validate_seed_change)
         self.menu_action_timeout_generation_after_a_time_limit.triggered.connect(self._on_generate_time_limit_change)
+        self.menu_action_open_dolphin_hook.triggered.connect(self._open_dolphin_hook)
 
         self.generate_seed_tab = GenerateSeedTab(self, self, self, options)
         self.generate_seed_tab.setup_ui()
@@ -386,6 +387,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, WindowManager, BackgroundTaskMixin)
         is_checked = self.menu_action_timeout_generation_after_a_time_limit.isChecked()
         with self._options as options:
             options.advanced_timeout_during_generation = is_checked
+
+    def _open_dolphin_hook(self):
+        from randovania.gui.dolphin_hook_window import DolphinHookWindow
+        self.dolphin_hook_window = DolphinHookWindow(None, None)
+        self.dolphin_hook_window.show()
 
     def _update_hints_text(self):
         game_description = default_database.default_prime2_game_description()

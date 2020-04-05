@@ -10,6 +10,7 @@ from randovania.game_description.node import PickupNode
 from randovania.games.prime import patcher_file
 from randovania.gui.dialog.echoes_user_preferences_dialog import EchoesUserPreferencesDialog
 from randovania.gui.dialog.game_input_dialog import GameInputDialog
+from randovania.gui.dolphin_hook_window import DolphinHookWindow
 from randovania.gui.generated.seed_details_window_ui import Ui_SeedDetailsWindow
 from randovania.gui.lib import preset_describer
 from randovania.gui.lib.background_task_mixin import BackgroundTaskMixin
@@ -89,6 +90,7 @@ class SeedDetailsWindow(QMainWindow, Ui_SeedDetailsWindow):
         self.export_iso_button.clicked.connect(self._export_iso)
         self._action_open_tracker.triggered.connect(self._open_map_tracker)
         self._action_copy_permalink.triggered.connect(self._copy_permalink)
+        self._action_open_dolphin.triggered.connect(self._open_dolphin)
         self.player_index_combo.activated.connect(self._update_current_player)
 
         # Cosmetic
@@ -108,6 +110,14 @@ class SeedDetailsWindow(QMainWindow, Ui_SeedDetailsWindow):
     # Operations
     def _copy_permalink(self):
         QApplication.clipboard().setText(self.layout_description.permalink.as_str)
+
+    def _open_dolphin(self):
+        self._window_manager.dolphin_window = DolphinHookWindow(self.layout_description,
+                                                                PlayersConfiguration(
+                                                                    self.current_player_index,
+                                                                    self._player_names)
+                                                                )
+        self._window_manager.dolphin_window.show()
 
     def _export_log(self):
         default_name = "Echoes Randomizer - {}.{}".format(self.layout_description.shareable_word_hash,
