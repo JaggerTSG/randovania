@@ -1,7 +1,7 @@
 from functools import partial
 from typing import List, Dict
 
-from PySide2 import QtCore
+from PySide2 import QtCore, QtWidgets
 from PySide2.QtWidgets import QMainWindow, QRadioButton, QGroupBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, \
     QApplication, QDialog, QAction, QMenu
 
@@ -92,6 +92,7 @@ class SeedDetailsWindow(QMainWindow, Ui_SeedDetailsWindow):
         self._action_copy_permalink.triggered.connect(self._copy_permalink)
         self._action_open_dolphin.triggered.connect(self._open_dolphin)
         self.player_index_combo.activated.connect(self._update_current_player)
+        self.set_names_button.clicked.connect(self._open_set_player_names_popup)
 
         # Cosmetic
         self.remove_hud_popup_check.stateChanged.connect(self._persist_option_then_notify("hud_memo_popup_removal"))
@@ -265,6 +266,7 @@ class SeedDetailsWindow(QMainWindow, Ui_SeedDetailsWindow):
             self.player_index_combo.addItem(self._player_names[i], i)
         self.player_index_combo.setCurrentIndex(0)
         self.player_index_combo.setVisible(description.permalink.player_count > 1)
+        self.set_names_button.setVisible(description.permalink.player_count > 1)
 
         self._update_current_player()
 
@@ -336,6 +338,34 @@ class SeedDetailsWindow(QMainWindow, Ui_SeedDetailsWindow):
 
             if not pickup_button.item_is_hidden:
                 pickup_button.setText(pickup_button.item_name)
+
+    def _open_set_player_names_popup(self):
+        popup = QDialog(self)
+        layout = QtWidgets.QGridLayout(popup)
+
+        edits = []
+        for i, name in self._player_names.items():
+            label = QtWidgets.QLabel(popup)
+            label.setText(f"Player {i + 1}")
+            layout.addWidget(label, i, 0)
+
+            edit = QtWidgets.QLineEdit(popup)
+            edit.setText(name)
+            edits.append(edit)
+            layout.addWidget(edit, i, 1)
+
+        button_box = QtWidgets.QDialogButtonBox(popup)
+        button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        layout.addWidget(button_box, len(self._player_names), 0, 1, 2)
+
+        QtCore.QObject.connect(button_box, QtCore.SIGNAL("accepted()"), popup.accept)
+        QtCore.QObject.connect(button_box, QtCore.SIGNAL("rejected()"), popup.reject)
+
+        result = popup.exec_()
+        if result == QDialog.Accepted:
+            for i, name in enumerate(edits):
+                self._player_names[i] = name.text()
+                self.player_index_combo.setItemText(i, name.text())
 
     def _toggle_pickup_spoiler(self, button):
         if button.item_is_hidden:
