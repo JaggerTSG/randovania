@@ -3,7 +3,7 @@ import json
 import threading
 import time
 from pathlib import Path
-from typing import Tuple, List, Optional, Dict
+from typing import Tuple, List, Optional, Dict, NamedTuple
 
 import dolphin_memory_engine
 import pika
@@ -15,7 +15,7 @@ from pika.adapters.blocking_connection import BlockingChannel
 
 from randovania import get_data_path
 from randovania.game_description import data_reader
-from randovania.game_description.resources.pickup_entry import PickupEntry
+from randovania.game_description.resources.pickup_entry import PickupEntry, ConditionalResources
 from randovania.game_description.resources.pickup_index import PickupIndex
 from randovania.game_description.resources.resource_database import find_resource_info_with_long_name
 from randovania.game_description.resources.resource_type import ResourceType
@@ -52,10 +52,16 @@ class ServerConnection(threading.Thread):
             pass
 
 
+class PickupGift(NamedTuple):
+    pickup: PickupEntry
+    source_player: int
+
+
 class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
     _hooked = False
     _base_address: int
-    give_item_signal = Signal(PickupEntry)
+    give_item_signal = Signal(PickupGift)
+    last_message_size = 0
 
     def __init__(self, layout: LayoutDescription, players_config: PlayersConfiguration):
         super().__init__()
@@ -66,6 +72,9 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
         if players_config is not None:
             self.player_index = players_config.player_index
             self.player_names = players_config.player_names
+        else:
+            self.player_index = 0
+            self.player_names = {}
 
         # self.game_data = data_reader.decode_data(layout.permalink.layout_configuration.game_data)
         self.game_data = data_reader.decode_data(default_data.decode_default_prime2())
@@ -73,7 +82,7 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
         self._energy_tank_item = find_resource_info_with_long_name(self.game_data.resource_database.item, "Energy Tank")
         self.channel = None
 
-        self._pending_receive: List[PickupEntry] = []
+        self._pending_receive: List[PickupGift] = []
         self._pending_send: List[int] = []
 
         self._item_to_label: Dict[SimpleResourceInfo, ClickableLabel] = {}
@@ -83,6 +92,10 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
         self._update_timer = QTimer(self)
         self._update_timer.setInterval(100)
 
+        for item in self.game_data.resource_database.item:
+            self.give_item_combo.addItem(item.long_name, item)
+
+        self.give_item_button.clicked.connect(self.give_item_cheat)
         self.give_item_signal.connect(self.give_pickup)
         self.connect_button.clicked.connect(self.connect_to_server)
         self._update_timer.timeout.connect(self._on_timer_update)
@@ -125,7 +138,7 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
                 print(">>> WARNING! received pickup wasn't for us")
 
             self.add_log_entry(f"Received {target.pickup.name} from {self.player_names[source_player]}")
-            self.give_item_signal.emit(target.pickup)
+            self.give_item_signal.emit(PickupGift(target.pickup, source_player))
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def _addresses_for_item(self, item: SimpleResourceInfo) -> Tuple[int, int]:
@@ -178,16 +191,34 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
     def add_log_entry(self, log: str):
         QListWidgetItem(self.history_list).setText(log)
 
-    def give_pickup(self, entry: PickupEntry):
+    def give_pickup(self, entry: PickupGift):
         if not self._hooked:
             self._pending_receive.append(entry)
             return
+
+        if entry.source_player != self.player_index:
+            # Send message
+            max_message_size = 0x58
+            player_name = self.player_names.get(entry.source_player, "someone")
+            message = f"Received {entry.pickup.name} from {player_name}."
+            encoded_message = message.encode("utf-16_be")[:max_message_size]
+
+            # The game doesn't handle very well a string at the same address with same size being
+            # displayed multiple times
+            if len(encoded_message) == self.last_message_size:
+                encoded_message += b'\x00 '
+
+            self.last_message_size = len(encoded_message)
+            dolphin_memory_engine.write_bytes(0x803A6380, encoded_message + b"\x00\x00")
+
+            # Notify game to display message
+            dolphin_memory_engine.write_byte(0x803DB6E2, 1)
 
         current_resources = {}
         for item in self.game_data.resource_database.item:
             current_resources[item] = dolphin_memory_engine.read_word(self._addresses_for_item(item)[0])
 
-        for item, delta in entry.resource_gain(copy.copy(current_resources)):
+        for item, delta in entry.pickup.resource_gain(copy.copy(current_resources)):
             if item.index == 47:
                 # Item% was already set
                 continue
@@ -248,7 +279,7 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
         pickup_target = self.layout.all_patches[self.player_index].pickup_assignment.get(PickupIndex(collected_index))
         if pickup_target is not None:
             if pickup_target.player == self.player_index:
-                self.give_item_signal.emit(pickup_target.pickup)
+                self.give_item_signal.emit(PickupGift(pickup_target.pickup, self.player_index))
             else:
                 self._pending_send.append(collected_index)
 
@@ -373,6 +404,18 @@ class DolphinHookWindow(QMainWindow, Ui_DolphinHookWindow):
              find_resource("Sky Temple Key 4"), find_resource("Sky Temple Key 5"), find_resource("Sky Temple Key 6"),
              find_resource("Sky Temple Key 7"), find_resource("Sky Temple Key 8"), find_resource("Sky Temple Key 9"),)
         ))
+
+    def give_item_cheat(self):
+        item: SimpleResourceInfo = self.give_item_combo.currentData()
+        pickup = PickupEntry(
+            name=item.long_name,
+            model_index=0,
+            item_category=None,
+            resources=(
+                ConditionalResources(None, None, ((item, 1),),),
+            )
+        )
+        self.give_pickup(PickupGift(pickup, None))
 
     def closeEvent(self, event):
         if self.channel is not None:

@@ -15,32 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <widget class="QGroupBox" name="inventory_group">
-      <property name="title">
-       <string>Inventory</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-      </property>
-      <layout class="QGridLayout" name="inventory_layout"/>
-     </widget>
-    </item>
-    <item row="0" column="2" colspan="3">
-     <widget class="QLabel" name="player_name_label">
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QPushButton" name="connect_button">
-      <property name="text">
-       <string>Connect to server</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
+    <item row="4" column="0">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -53,13 +28,48 @@
       </property>
      </spacer>
     </item>
-    <item row="1" column="1" rowspan="2" colspan="4">
+    <item row="0" column="2" colspan="3">
+     <widget class="QLabel" name="player_name_label">
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QComboBox" name="give_item_combo"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QPushButton" name="connect_button">
+      <property name="text">
+       <string>Connect to server</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QGroupBox" name="inventory_group">
+      <property name="title">
+       <string>Inventory</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+      <layout class="QGridLayout" name="inventory_layout"/>
+     </widget>
+    </item>
+    <item row="1" column="1" rowspan="4" colspan="4">
      <widget class="QListWidget" name="history_list"/>
     </item>
     <item row="0" column="0">
      <widget class="QLabel" name="hook_status_label">
       <property name="text">
        <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="give_item_button">
+      <property name="text">
+       <string>Give item</string>
       </property>
      </widget>
     </item>
