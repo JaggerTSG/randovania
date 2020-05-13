@@ -1,3 +1,5 @@
+import sys
+
 from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py
 from pyqt_distutils.build_ui import build_ui
@@ -22,6 +24,12 @@ def version_scheme(version):
         return version.format_next_version(
             setuptools_scm.version.guess_next_simple_semver, retain=setuptools_scm.version.SEMVER_MINOR
         )
+
+
+if sys.platform == "darwin":
+    dolphin_memory = []
+else:
+    dolphin_memory = ['dolphin-memory-engine>=1.0.0']
 
 
 setup(
@@ -76,7 +84,7 @@ setup(
         'pytest',
         'pytest-cov',
         'pytest-qt',
-    ],
+    ] + dolphin_memory,
     entry_points={
         'console_scripts': [
             "randovania = randovania.__main__:main"
