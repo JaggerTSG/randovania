@@ -1,3 +1,5 @@
+import sys
+
 from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py
 
@@ -27,6 +29,11 @@ def version_scheme(version):
             setuptools_scm.version.guess_next_simple_semver, retain=setuptools_scm.version.SEMVER_MINOR
         )
 
+
+if sys.platform == "darwin":
+    dolphin_memory = []
+else:
+    dolphin_memory = ['dolphin-memory-engine>=1.0.0']
 
 setup(
     name='randovania',
@@ -72,8 +79,9 @@ setup(
         'bitstruct',
         'construct<2.10',
         'tenacity',
-        'slugify',
         'python-slugify',
+        'python-socketio[asyncio_client]',
+        'aiohttp[speedups]',
     ],
     extras_require={
         "gui": [
@@ -81,7 +89,17 @@ setup(
             'aiofiles',
             'appdirs',
             'asyncqt',
+            'markdown',
+            'pypresence',
             'requests',
+        ] + dolphin_memory,
+        "server": [
+            "cryptography",
+            "eventlet",
+            "flask-discord",
+            "flask-socketio",
+            "peewee",
+            "requests-oauthlib",
         ],
         "test": [
             'pytest',

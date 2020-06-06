@@ -2,10 +2,18 @@ import asyncio
 import os
 import sys
 from argparse import ArgumentParser
+from pathlib import Path
 
 from PySide2 import QtCore
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication, QMessageBox, QWidget
+from asyncqt import asyncClose
 
+from randovania.game_connection.dolphin_backend import DolphinBackend
+from randovania.game_connection.game_connection import GameConnection
+from randovania.gui.debug_backend_window import DebugBackendWindow
+from randovania.gui.lib.qt_network_client import QtNetworkClient
+from randovania.interface_common import persistence
 from randovania.interface_common.options import Options, DecodeFailedException
 from randovania.interface_common.preset_manager import PresetManager, InvalidPreset
 from randovania.layout.preset import Preset
@@ -112,6 +120,7 @@ def show_tracker(app: QApplication):
 
 def run(args):
     QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
     app = QApplication(sys.argv)
 
     os.environ['QT_API'] = "PySide2"
@@ -120,6 +129,28 @@ def run(args):
     asyncio.set_event_loop(loop)
 
     sys.excepthook = catch_exceptions
+
+    data_dir = getattr(args, "custom_network_storage", None)
+    if data_dir is None:
+        data_dir = persistence.user_data_dir()
+
+    app.network_client = QtNetworkClient(data_dir)
+    app.game_connection = GameConnection()
+
+    if getattr(args, "debug_game_backend", False):
+        backend = DebugBackendWindow()
+        backend.show()
+    else:
+        backend = DolphinBackend()
+
+    app.game_connection.set_backend(backend)
+
+    @asyncClose
+    async def _on_last_window_closed():
+        await app.network_client.disconnect_from_server()
+        await app.game_connection.stop()
+
+    app.lastWindowClosed.connect(_on_last_window_closed, Qt.QueuedConnection)
 
     target_window = getattr(args, "window", None)
     if target_window == "data-editor":
@@ -130,6 +161,8 @@ def run(args):
         show_main_window(app, getattr(args, "preview", False))
 
     with loop:
+        loop.create_task(app.network_client.connect_if_authenticated())
+        loop.create_task(app.game_connection.start())
         sys.exit(loop.run_forever())
 
 
@@ -139,6 +172,8 @@ def create_subparsers(sub_parsers):
         help="Run the Graphical User Interface"
     )
     parser.add_argument("--preview", action="store_true", help="Activates preview features")
+    parser.add_argument("--custom-network-storage", type=Path, help="Use a custom path to store the network login.")
+    parser.add_argument("--debug-game-backend", action="store_true", help="Opens the debug game backend.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--data-editor", action="store_const", dest="window", const="data-editor",
                        help="Opens only data editor window")
