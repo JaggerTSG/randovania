@@ -87,8 +87,7 @@ def generate_description(permalink: Permalink,
 
 
 def _validate_item_pool_size(item_pool: List[PickupEntry], game: GameDescription) -> None:
-    num_pickup_nodes = len(list(filter_pickup_nodes(game.world_list.all_nodes)))
-    if len(item_pool) > num_pickup_nodes:
+    if len(item_pool) > game.world_list.num_pickup_nodes:
         raise InvalidConfiguration(
             "Item pool has {0} items, but there's only {1} pickups spots in the game".format(len(item_pool),
                                                                                              num_pickup_nodes))
@@ -192,10 +191,11 @@ def _retryable_create_patches(rng: Random,
     :param status_update:
     :return:
     """
-    player_pools: Dict[int, PlayerPool] = {
-        player_index: create_player_pool(rng, player_preset.layout_configuration, player_index)
-        for player_index, player_preset in presets.items()
-    }
+    player_pools: Dict[int, PlayerPool] = {}
+
+    for player_index, player_preset in presets.items():
+        status_update(f"Creating item pool for player {player_index + 1}")
+        player_pools[player_index] = create_player_pool(rng, player_preset.layout_configuration, player_index)
 
     for player_pool in player_pools.values():
         _validate_item_pool_size(player_pool.pickups, player_pool.game)

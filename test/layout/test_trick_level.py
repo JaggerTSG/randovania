@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 from randovania.bitpacking import bitpacking
@@ -9,21 +7,21 @@ from randovania.layout.trick_level import TrickLevelConfiguration
 
 @pytest.fixture(
     params=[
-        {"encoded": b'`\x00\x00', "json": {"global_level": "hard", "specific_levels": {}}},
-        {"encoded": b'\xc0\x00\x00', "json": {"global_level": "minimal-restrictions", "specific_levels": {}}},
-        {"encoded": b'P\x00\x00', "json": {"global_level": "normal", "specific_levels": {0: "no-tricks"}}},
-        {"encoded": b'{\xbb\xbb\xbb\xbb\xbb\xa0', "json": {"global_level": "hard", "specific_levels": {
+        {"encoded": b'`\x00\x00', "json": {"global_level": "advanced", "specific_levels": {}}},
+        {"encoded": b'\xc0\x00\x00', "json": {"global_level": "minimal-logic", "specific_levels": {}}},
+        {"encoded": b'P\x00\x00', "json": {"global_level": "intermediate", "specific_levels": {0: "no-tricks"}}},
+        {"encoded": b'{\xbb\xbb\xbb\xbb\xbb\xa0', "json": {"global_level": "advanced", "specific_levels": {
             i: "hypermode"
             for i in range(12)
         }}},
     ],
     name="configuration_with_data")
-def _configuration_with_data(request):
+def _configuration_with_data(request, mocker):
+    mocker.patch("randovania.layout.trick_level._all_trick_indices", return_value=set(range(14)))
     return request.param["encoded"], TrickLevelConfiguration.from_json(request.param["json"])
 
 
-@patch("randovania.layout.trick_level.TrickLevelConfiguration.all_possible_tricks", return_value=set(range(14)))
-def test_decode(mock_possible_tricks, configuration_with_data):
+def test_decode(configuration_with_data):
     # Setup
     data, expected = configuration_with_data
 
@@ -35,9 +33,7 @@ def test_decode(mock_possible_tricks, configuration_with_data):
     assert result == expected
 
 
-@patch("randovania.layout.trick_level.TrickLevelConfiguration.all_possible_tricks", return_value=set(range(14)))
-def test_encode(mock_possible_tricks, configuration_with_data):
-    # Setup
+def test_encode(configuration_with_data):
     expected, value = configuration_with_data
 
     # Run

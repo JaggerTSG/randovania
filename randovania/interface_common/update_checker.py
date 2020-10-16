@@ -15,13 +15,17 @@ class VersionDescription(NamedTuple):
         return StrictVersion(self.tag_name[1:])
 
 
-def strict_current_version() -> StrictVersion:
+def strict_version_for_version_string(version_name: str) -> StrictVersion:
     try:
-        return StrictVersion(VERSION)
+        return StrictVersion(version_name)
     except ValueError:
-        if ".dev" not in VERSION:
+        if ".dev" not in version_name:
             raise
-        return StrictVersion(VERSION.split(".dev")[0])
+        return StrictVersion(version_name.split(".dev")[0])
+
+
+def strict_current_version() -> StrictVersion:
+    return strict_version_for_version_string(VERSION)
 
 
 def get_version_for_release(release: dict) -> VersionDescription:
@@ -54,7 +58,7 @@ def versions_to_display_for_releases(current_version: StrictVersion,
                 if "*Major*" in log:
                     first_non_major = re.search(r"\n\s*-\s+[^*]+\n", log)
                     if first_non_major is not None:
-                        log = log[:first_non_major.start()] + "\n\nFor more details, check the Change Log tab."
+                        log = log[:first_non_major.start()] + "\n\n---\nFor more details, check the Change Log tab."
                 new_change_logs.append(log)
 
     return all_change_logs, new_change_logs, version_to_display

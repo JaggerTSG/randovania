@@ -1,21 +1,22 @@
 import copy
 import dataclasses
 from enum import Enum
-from typing import List, Dict, Iterator, Tuple, FrozenSet, Optional
+from typing import List, Dict, Iterator, Tuple, Optional
 
 from randovania.bitpacking import bitpacking
 from randovania.bitpacking.bitpacking import BitPackEnum, BitPackValue, BitPackDecoder
-from randovania.game_description.resources.simple_resource_info import SimpleResourceInfo
+from randovania.game_description import default_database
+from randovania.game_description.resources.trick_resource_info import TrickResourceInfo
 
 
 class LayoutTrickLevel(BitPackEnum, Enum):
     NO_TRICKS = "no-tricks"
-    TRIVIAL = "trivial"
-    NORMAL = "normal"
-    HARD = "hard"
-    VETERAN = "veteran"
+    BEGINNER = "beginner"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+    EXPERT = "expert"
     HYPERMODE = "hypermode"
-    MINIMAL_RESTRICTIONS = "minimal-restrictions"
+    MINIMAL_LOGIC = "minimal-logic"
 
     @classmethod
     def default(cls) -> "LayoutTrickLevel":
@@ -37,13 +38,18 @@ class LayoutTrickLevel(BitPackEnum, Enum):
 _TRICK_LEVEL_ORDER: List[LayoutTrickLevel] = list(LayoutTrickLevel)
 _PRETTY_TRICK_LEVEL_NAME = {
     LayoutTrickLevel.NO_TRICKS: "No Tricks",
-    LayoutTrickLevel.TRIVIAL: "Trivial",
-    LayoutTrickLevel.NORMAL: "Normal",
-    LayoutTrickLevel.HARD: "Hard",
-    LayoutTrickLevel.VETERAN: "Veteran",
+    LayoutTrickLevel.BEGINNER: "Beginner",
+    LayoutTrickLevel.INTERMEDIATE: "Intermediate",
+    LayoutTrickLevel.ADVANCED: "Advanced",
+    LayoutTrickLevel.EXPERT: "Expert",
     LayoutTrickLevel.HYPERMODE: "Hypermode",
-    LayoutTrickLevel.MINIMAL_RESTRICTIONS: "Minimal Restrictions",
+    LayoutTrickLevel.MINIMAL_LOGIC: "Minimal Logic",
 }
+
+
+def _all_trick_indices():
+    resource_db = default_database.default_prime2_game_description().resource_database
+    return {trick.index for trick in resource_db.trick}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,11 +61,7 @@ class TrickLevelConfiguration(BitPackValue):
         if not isinstance(self.global_level, LayoutTrickLevel):
             raise ValueError(f"Invalid global_level `{self.global_level}`, expected a LayoutTrickLevel")
 
-        all_possible_tricks = TrickLevelConfiguration.all_possible_tricks()
         for trick, level in self.specific_levels.items():
-            if trick not in all_possible_tricks:
-                raise ValueError(f"Trick `{trick}` not a possible trick.")
-
             if not isinstance(level, LayoutTrickLevel):
                 raise ValueError(f"Invalid level `{level}` for trick {trick}, expected a LayoutTrickLevel")
 
@@ -71,9 +73,9 @@ class TrickLevelConfiguration(BitPackValue):
         yield from self.global_level.bit_pack_encode(metadata)
 
         encodable_levels = list(LayoutTrickLevel)
-        encodable_levels.remove(LayoutTrickLevel.MINIMAL_RESTRICTIONS)
+        encodable_levels.remove(LayoutTrickLevel.MINIMAL_LOGIC)
 
-        for trick in sorted(TrickLevelConfiguration.all_possible_tricks()):
+        for trick in sorted(_all_trick_indices()):
             if trick in self.specific_levels:
                 yield from bitpacking.encode_bool(True)
                 yield from bitpacking.pack_array_element(self.specific_levels[trick], encodable_levels)
@@ -85,10 +87,10 @@ class TrickLevelConfiguration(BitPackValue):
         global_level = LayoutTrickLevel.bit_pack_unpack(decoder, metadata)
 
         encodable_levels = list(LayoutTrickLevel)
-        encodable_levels.remove(LayoutTrickLevel.MINIMAL_RESTRICTIONS)
+        encodable_levels.remove(LayoutTrickLevel.MINIMAL_LOGIC)
 
         specific_levels = {}
-        for trick in sorted(cls.all_possible_tricks()):
+        for trick in sorted(_all_trick_indices()):
             if bitpacking.decode_bool(decoder):
                 specific_levels[trick] = decoder.decode_element(encodable_levels)
 
@@ -123,13 +125,13 @@ class TrickLevelConfiguration(BitPackValue):
             },
         )
 
-    def has_specific_level_for_trick(self, trick: SimpleResourceInfo) -> bool:
+    def has_specific_level_for_trick(self, trick: TrickResourceInfo) -> bool:
         return trick.index in self.specific_levels
 
-    def level_for_trick(self, trick: SimpleResourceInfo) -> LayoutTrickLevel:
+    def level_for_trick(self, trick: TrickResourceInfo) -> LayoutTrickLevel:
         return self.specific_levels.get(trick.index, self.global_level)
 
-    def set_level_for_trick(self, trick: SimpleResourceInfo,
+    def set_level_for_trick(self, trick: TrickResourceInfo,
                             value: Optional[LayoutTrickLevel],
                             ) -> "TrickLevelConfiguration":
         """
@@ -147,28 +149,7 @@ class TrickLevelConfiguration(BitPackValue):
 
         return dataclasses.replace(self, specific_levels=new_levels)
 
-    @classmethod
-    def all_possible_tricks(cls) -> FrozenSet[int]:
-        return frozenset({
-            0,   # Scan Dash
-            1,   # Difficult Bomb Jump
-            2,   # Slope Jump
-            3,   # R Jump
-            4,   # BSJ
-            5,   # Roll Jump
-            6,   # Underwater Dash
-            7,   # Air Underwater
-            8,   # Floaty
-            9,   # Infinite Speed
-            10,  # SA without SJ
-            11,  # Wall Boost
-            12,  # Jump off Enemy
-            # 14,# Controller Reset
-            15,  # Instant Morph
-            26,  # Invisible Objects
-            27,  # Standable Terrain
-            28,  # Terminal Fall Abuse
-            29,  # Boost Jump
-            30,  # Extended Dash
-            31,  # Bomb Slot without Bombs
-        })
+    def dangerous_settings(self) -> List[str]:
+        if self.global_level == LayoutTrickLevel.MINIMAL_LOGIC:
+            return ["Minimal Logic"]
+        return []

@@ -6,7 +6,6 @@ from typing import Optional, TypeVar, Callable, Any
 
 from randovania.interface_common import persistence, update_checker
 from randovania.interface_common.cosmetic_patches import CosmeticPatches
-from randovania.interface_common.echoes_user_preferences import EchoesUserPreferences
 from randovania.interface_common.persisted_options import get_persisted_options_from_data, serialized_data_for_options
 
 T = TypeVar("T")
@@ -27,6 +26,7 @@ _SERIALIZER_FOR_FIELD = {
     "advanced_validate_seed_after": Serializer(identity, bool),
     "advanced_timeout_during_generation": Serializer(identity, bool),
     "auto_save_spoiler": Serializer(identity, bool),
+    "dark_mode": Serializer(identity, bool),
     "output_directory": Serializer(str, Path),
     "selected_preset_name": Serializer(identity, str),
     "cosmetic_patches": Serializer(lambda p: p.as_json, CosmeticPatches.from_json_dict),
@@ -60,6 +60,7 @@ class Options:
     _advanced_validate_seed_after: Optional[bool] = None
     _advanced_timeout_during_generation: Optional[bool] = None
     _auto_save_spoiler: Optional[bool] = None
+    _dark_mode: Optional[bool] = None
     _output_directory: Optional[Path] = None
     _selected_preset_name: Optional[str] = None
     _cosmetic_patches: Optional[CosmeticPatches] = None
@@ -222,14 +223,22 @@ class Options:
     @output_directory.setter
     def output_directory(self, value: Optional[Path]):
         self._edit_field("output_directory", value)
-        
+
     @property
     def auto_save_spoiler(self) -> bool:
         return _return_with_default(self._auto_save_spoiler, lambda: False)
-    
+
     @auto_save_spoiler.setter
     def auto_save_spoiler(self, value: bool):
         self._edit_field("auto_save_spoiler", value)
+
+    @property
+    def dark_mode(self) -> bool:
+        return _return_with_default(self._dark_mode, lambda: False)
+
+    @dark_mode.setter
+    def dark_mode(self, value: bool):
+        self._edit_field("dark_mode", value)
 
     @property
     def selected_preset_name(self) -> Optional[str]:

@@ -1,6 +1,6 @@
 from functools import lru_cache
 from math import ceil
-from typing import NamedTuple, Optional, Iterable, FrozenSet, Iterator, Tuple
+from typing import NamedTuple, Optional, Iterable, FrozenSet, Iterator, Tuple, List, Type, Union
 
 from randovania.game_description.resources.resource_database import ResourceDatabase
 from randovania.game_description.resources.resource_info import ResourceInfo, CurrentResources
@@ -11,7 +11,7 @@ MAX_DAMAGE = 9999999
 
 
 class Requirement:
-    def damage(self, current_resources: CurrentResources, current_energy: int) -> int:
+    def damage(self, current_resources: CurrentResources) -> int:
         raise NotImplementedError()
 
     def satisfied(self, current_resources: CurrentResources, current_energy: int) -> bool:
@@ -57,6 +57,9 @@ class Requirement:
     def __lt__(self, other: "Requirement"):
         return str(self) < str(other)
 
+    def iterate_resource_requirements(self):
+        raise NotImplementedError()
+
 
 class RequirementAnd(Requirement):
     items: Tuple[Requirement, ...]
@@ -65,11 +68,14 @@ class RequirementAnd(Requirement):
     def __init__(self, items: Iterable[Requirement]):
         self.items = tuple(items)
 
-    def damage(self, current_resources: CurrentResources, current_energy: int) -> int:
-        return sum(
-            item.damage(current_resources, current_energy)
-            for item in self.items
-        )
+    def damage(self, current_resources: CurrentResources) -> int:
+        result = 0
+        for item in self.items:
+            if item.satisfied(current_resources, MAX_DAMAGE):
+                result += item.damage(current_resources)
+            else:
+                return MAX_DAMAGE
+        return result
 
     def satisfied(self, current_resources: CurrentResources, current_energy: int) -> bool:
         return all(
@@ -84,20 +90,9 @@ class RequirementAnd(Requirement):
         )
 
     def simplify(self) -> Requirement:
-        expanded = []
-        for item in self.items:
-            simplified_item = item.simplify()
-            if isinstance(simplified_item, RequirementAnd):
-                expanded.extend(simplified_item.items)
-            else:
-                expanded.append(simplified_item)
-
-        new_items = []
-        for item in expanded:
-            if item == Requirement.impossible():
-                return item
-            elif item != Requirement.trivial():
-                new_items.append(item)
+        new_items = _expand_items(self.items, RequirementAnd, Requirement.trivial())
+        if Requirement.impossible() in new_items:
+            return Requirement.impossible()
 
         if len(new_items) == 1:
             return new_items[0]
@@ -133,6 +128,10 @@ class RequirementAnd(Requirement):
         else:
             return "Trivial"
 
+    def iterate_resource_requirements(self):
+        for item in self.items:
+            yield from item.iterate_resource_requirements()
+
 
 class RequirementOr(Requirement):
     items: Tuple[Requirement, ...]
@@ -141,12 +140,12 @@ class RequirementOr(Requirement):
     def __init__(self, items: Iterable[Requirement]):
         self.items = tuple(items)
 
-    def damage(self, current_resources: CurrentResources, current_energy: int) -> int:
+    def damage(self, current_resources: CurrentResources) -> int:
         try:
             return min(
-                item.damage(current_resources, current_energy)
+                item.damage(current_resources)
                 for item in self.items
-                if item.satisfied(current_resources, current_energy)
+                if item.satisfied(current_resources, MAX_DAMAGE)
             )
         except ValueError:
             return MAX_DAMAGE
@@ -164,20 +163,9 @@ class RequirementOr(Requirement):
         )
 
     def simplify(self) -> Requirement:
-        expanded = []
-        for item in self.items:
-            simplified = item.simplify()
-            if isinstance(simplified, RequirementOr):
-                expanded.extend(simplified.items)
-            else:
-                expanded.append(simplified)
-
-        new_items = []
-        for item in expanded:
-            if item == Requirement.trivial():
-                return item
-            elif item != Requirement.impossible():
-                new_items.append(item)
+        new_items = _expand_items(self.items, RequirementOr, Requirement.impossible())
+        if Requirement.trivial() in new_items:
+            return Requirement.trivial()
 
         num_and_requirements = 0
         common_requirements = None
@@ -249,6 +237,29 @@ class RequirementOr(Requirement):
         else:
             return "Impossible"
 
+    def iterate_resource_requirements(self):
+        for item in self.items:
+            yield from item.iterate_resource_requirements()
+
+
+def _expand_items(items: Tuple[Requirement, ...],
+                  cls: Type[Union[RequirementAnd, RequirementOr]],
+                  exclude: Requirement) -> List[Requirement]:
+    expanded = []
+
+    def _add(_item):
+        if _item not in expanded and _item != exclude:
+            expanded.append(_item)
+
+    for item in items:
+        simplified = item.simplify()
+        if isinstance(simplified, cls):
+            for new_item in simplified.items:
+                _add(new_item)
+        else:
+            _add(simplified)
+    return expanded
+
 
 class ResourceRequirement(NamedTuple, Requirement):
     resource: ResourceInfo
@@ -271,7 +282,7 @@ class ResourceRequirement(NamedTuple, Requirement):
     def is_damage(self) -> bool:
         return self.resource.resource_type == ResourceType.DAMAGE
 
-    def damage(self, current_resources: CurrentResources, current_energy: int) -> int:
+    def damage(self, current_resources: CurrentResources) -> int:
         if self.resource.resource_type == ResourceType.DAMAGE:
             return ceil(self.resource.damage_reduction(current_resources) * self.amount)
         else:
@@ -283,7 +294,7 @@ class ResourceRequirement(NamedTuple, Requirement):
         if self.is_damage:
             assert not self.negate, "Damage requirements shouldn't have the negate flag"
 
-            return current_energy > self.damage(current_resources, current_energy)
+            return current_energy > self.damage(current_resources)
 
         has_amount = current_resources.get(self.resource, 0) >= self.amount
         if self.negate:
@@ -303,8 +314,8 @@ class ResourceRequirement(NamedTuple, Requirement):
     @property
     def pretty_text(self):
         if self.amount == 1:
-            negated_prefix = "No " if self.resource.resource_type is ResourceType.ITEM else "Before "
-            non_negated_prefix = "After " if self.resource.resource_type is ResourceType.EVENT else ""
+            negated_prefix = self.resource.resource_type.negated_prefix
+            non_negated_prefix = self.resource.resource_type.non_negated_prefix
             return "{}{}".format(negated_prefix if self.negate else non_negated_prefix, self.resource)
         else:
             return str(self)
@@ -344,6 +355,9 @@ class ResourceRequirement(NamedTuple, Requirement):
             ])
         ])
 
+    def iterate_resource_requirements(self):
+        yield self
+
 
 class RequirementTemplate(Requirement):
     database: ResourceDatabase
@@ -357,8 +371,8 @@ class RequirementTemplate(Requirement):
     def template_requirement(self) -> Requirement:
         return self.database.requirement_template[self.template_name]
 
-    def damage(self, current_resources: CurrentResources, current_energy: int) -> int:
-        return self.template_requirement.damage(current_resources, current_energy)
+    def damage(self, current_resources: CurrentResources) -> int:
+        return self.template_requirement.damage(current_resources)
 
     def satisfied(self, current_resources: CurrentResources, current_energy: int) -> bool:
         return self.template_requirement.satisfied(current_resources, current_energy)
@@ -378,10 +392,13 @@ class RequirementTemplate(Requirement):
         return isinstance(other, RequirementTemplate) and self.template_name == other.template_name
 
     def __hash__(self) -> int:
-        return hash((self.database, self.template_name))
+        return hash(self.template_name)
 
     def __str__(self) -> str:
         return self.template_name
+
+    def iterate_resource_requirements(self):
+        yield from self.template_requirement.iterate_resource_requirements()
 
 
 class RequirementList:
@@ -428,7 +445,7 @@ class RequirementList:
         for requirement in self.values():
             if requirement.satisfied(current_resources, current_energy):
                 if requirement.resource.resource_type == ResourceType.DAMAGE:
-                    energy -= requirement.damage(current_resources, current_energy)
+                    energy -= requirement.damage(current_resources)
             else:
                 return False
         return True
@@ -445,7 +462,7 @@ class RequirementList:
         return None
 
     @property
-    def dangerous_resources(self) -> Iterator[SimpleResourceInfo]:
+    def dangerous_resources(self) -> Iterator[ResourceInfo]:
         """
         Return an iterator of all SimpleResourceInfo in this list that have the negate flag
         :return:
@@ -453,13 +470,6 @@ class RequirementList:
         for individual in self.values():
             if individual.negate:
                 yield individual.resource
-
-    @property
-    def difficulty_level(self) -> int:
-        for individual in self.values():
-            if individual.resource.resource_type == ResourceType.DIFFICULTY:
-                return individual.amount
-        return 0
 
     def values(self) -> FrozenSet[ResourceRequirement]:
         return self.items
@@ -554,7 +564,7 @@ class RequirementSet:
         return RequirementSet(self.alternatives | other.alternatives)
 
     @property
-    def dangerous_resources(self) -> Iterator[SimpleResourceInfo]:
+    def dangerous_resources(self) -> Iterator[ResourceInfo]:
         """
         Return an iterator of all SimpleResourceInfo in all alternatives that have the negate flag
         :return:

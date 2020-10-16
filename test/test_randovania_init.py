@@ -1,13 +1,14 @@
 from pathlib import Path
-from unittest.mock import patch
+
+import pytest
 
 import randovania
 
 
-@patch("randovania.get_data_path", autospec=True)
-def test_get_configuration_default(mock_get_data_path, tmpdir):
+def test_get_configuration_default_missing(tmpdir, mocker):
     # Setup
-    mock_get_data_path.return_value = Path(tmpdir)
+    randovania.CONFIGURATION_FILE_PATH = None
+    mocker.patch("randovania._get_default_configuration_path", return_value=Path(tmpdir).joinpath("missing.json"))
 
     # Run
     config = randovania.get_configuration()
@@ -19,11 +20,15 @@ def test_get_configuration_default(mock_get_data_path, tmpdir):
     }
 
 
-@patch("randovania.get_data_path", autospec=True)
-def test_get_configuration_file(mock_get_data_path, tmpdir):
+@pytest.mark.parametrize("from_configured", [False, True])
+def test_get_configuration_file(tmpdir, mocker, from_configured):
     # Setup
-    mock_get_data_path.return_value = Path(tmpdir)
-    Path(tmpdir).joinpath("configuration.json").write_text('{"foo": 5}')
+    mocker.patch("randovania._get_default_configuration_path", return_value=Path(tmpdir).joinpath("provided.json"))
+    if from_configured:
+        Path(tmpdir).joinpath("configuration.json").write_text('{"foo": 5}')
+        randovania.CONFIGURATION_FILE_PATH = Path(tmpdir).joinpath("configuration.json")
+    else:
+        Path(tmpdir).joinpath("provided.json").write_text('{"foo": 5}')
 
     # Run
     config = randovania.get_configuration()
@@ -32,3 +37,12 @@ def test_get_configuration_file(mock_get_data_path, tmpdir):
     assert config == {
         "foo": 5,
     }
+
+
+def test_get_invalid_configuration_file(tmpdir):
+    # Setup
+    randovania.CONFIGURATION_FILE_PATH = Path(tmpdir).joinpath("configuration.json")
+
+    # Run
+    with pytest.raises(FileNotFoundError):
+        randovania.get_configuration()

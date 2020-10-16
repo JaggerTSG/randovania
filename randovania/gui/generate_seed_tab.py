@@ -1,5 +1,4 @@
 import datetime
-import json
 import random
 from functools import partial
 from pathlib import Path
@@ -7,10 +6,11 @@ from typing import Optional
 
 from PySide2.QtCore import Signal
 from PySide2.QtWidgets import QDialog, QMessageBox, QWidget, QMenu, QAction
+from asyncqt import asyncSlot
 
 from randovania.gui.dialog.logic_settings_window import LogicSettingsWindow
 from randovania.gui.generated.main_window_ui import Ui_MainWindow
-from randovania.gui.lib import preset_describer, common_qt_lib
+from randovania.gui.lib import preset_describer, common_qt_lib, async_dialog
 from randovania.gui.lib.background_task_mixin import BackgroundTaskMixin
 from randovania.gui.lib.window_manager import WindowManager
 from randovania.interface_common import simplified_patcher
@@ -19,7 +19,8 @@ from randovania.interface_common.preset_editor import PresetEditor
 from randovania.interface_common.status_update_lib import ProgressUpdateCallable
 from randovania.layout.layout_description import LayoutDescription
 from randovania.layout.permalink import Permalink
-from randovania.layout.preset import Preset, save_preset_file, read_preset_file
+from randovania.layout.preset import Preset
+from randovania.layout.preset_migration import VersionedPreset, InvalidPreset
 from randovania.resolver.exceptions import GenerationFailure
 
 
@@ -33,36 +34,34 @@ def persist_layout(data_dir: Path, description: LayoutDescription):
     description.save_to_file(file_path)
 
 
-class GenerateSeedTab(QWidget):
-    _current_lock_state: bool = True
-    _logic_settings_window = None
-    _current_preset: Preset = None
+class GenerateSeedTab(QWidget, BackgroundTaskMixin):
+    _logic_settings_window: Optional[LogicSettingsWindow] = None
+    _has_preset: bool = False
     _tool_button_menu: QMenu
     _action_delete: QAction
 
     failed_to_generate_signal = Signal(GenerationFailure)
 
-    def __init__(self, background_processor: BackgroundTaskMixin, window: Ui_MainWindow,
-                 window_manager: WindowManager, options: Options):
+    def __init__(self, window: Ui_MainWindow, window_manager: WindowManager, options: Options):
         super().__init__()
 
-        self.background_processor = background_processor
         self.window = window
         self._window_manager = window_manager
         self._options = options
-
-        self.failed_to_generate_signal.connect(self._show_failed_generation_exception)
 
     def setup_ui(self):
         window = self.window
 
         # Progress
-        self.background_processor.background_tasks_button_lock_signal.connect(self.enable_buttons_with_background_tasks)
+        self.background_tasks_button_lock_signal.connect(self.enable_buttons_with_background_tasks)
+        self.progress_update_signal.connect(self.update_progress)
+        self.failed_to_generate_signal.connect(self._show_failed_generation_exception)
+        self.window.stop_background_process_button.clicked.connect(self.stop_background_process)
 
         for preset in self._window_manager.preset_manager.all_presets:
             self._create_button_for_preset(preset)
 
-        self.window.num_players_spin_box.setVisible(self._window_manager.is_preview_mode and False)
+        self.window.num_players_spin_box.setVisible(self._window_manager.is_preview_mode)
 
         # Menu
         self._tool_button_menu = QMenu(window.preset_tool_button)
@@ -96,37 +95,43 @@ class GenerateSeedTab(QWidget):
                              "{}\n\nSome errors are expected to occur, please try again.".format(exception))
 
     @property
-    def _current_preset_data(self) -> Optional[Preset]:
+    def _current_preset_data(self) -> Optional[VersionedPreset]:
         return self._window_manager.preset_manager.preset_for_name(self.window.create_preset_combo.currentData())
 
     def enable_buttons_with_background_tasks(self, value: bool):
-        self._current_lock_state = value
-        self.window.welcome_tab.setEnabled(value)
+        self.window.stop_background_process_button.setEnabled(not value)
+        self.window.create_generate_button.setEnabled(value)
+        self.window.create_generate_race_button.setEnabled(value)
 
-    def _create_button_for_preset(self, preset: Preset):
+    def _create_button_for_preset(self, preset: VersionedPreset):
         create_preset_combo = self.window.create_preset_combo
         create_preset_combo.addItem(preset.name, preset.name)
 
-    def _add_new_preset(self, preset: Preset):
+    def _add_new_preset(self, preset: VersionedPreset):
         with self._options as options:
             options.selected_preset_name = preset.name
 
         if self._window_manager.preset_manager.add_new_preset(preset):
             self._create_button_for_preset(preset)
-        self.on_preset_changed(preset)
+        self.on_preset_changed(preset.get_preset())
 
-    def _on_customize_button(self):
-        editor = PresetEditor(self._current_preset_data)
+    @asyncSlot()
+    async def _on_customize_button(self):
+        if self._logic_settings_window is not None:
+            self._logic_settings_window.raise_()
+            return
+
+        editor = PresetEditor(self._current_preset_data.get_preset())
         self._logic_settings_window = LogicSettingsWindow(self._window_manager, editor)
 
         self._logic_settings_window.on_preset_changed(editor.create_custom_preset_with())
         editor.on_changed = lambda: self._logic_settings_window.on_preset_changed(editor.create_custom_preset_with())
 
-        result = self._logic_settings_window.exec_()
+        result = await async_dialog.execute_dialog(self._logic_settings_window)
         self._logic_settings_window = None
 
         if result == QDialog.Accepted:
-            self._add_new_preset(editor.create_custom_preset_with())
+            self._add_new_preset(VersionedPreset.with_preset(editor.create_custom_preset_with()))
 
     def _on_delete_preset(self):
         self._window_manager.preset_manager.delete_preset(self._current_preset_data)
@@ -136,15 +141,16 @@ class GenerateSeedTab(QWidget):
     def _on_export_preset(self):
         path = common_qt_lib.prompt_user_for_preset_file(self._window_manager, new_file=True)
         if path is not None:
-            save_preset_file(self._current_preset_data, path)
+            self._current_preset_data.save_to_file(path)
 
     def _on_import_preset(self):
         path = common_qt_lib.prompt_user_for_preset_file(self._window_manager, new_file=False)
         if path is None:
             return
 
+        preset = VersionedPreset.from_file_sync(path)
         try:
-            preset = read_preset_file(path)
+            preset.get_preset()
         except (ValueError, KeyError):
             QMessageBox.critical(
                 self._window_manager,
@@ -168,7 +174,18 @@ class GenerateSeedTab(QWidget):
 
     def _on_select_preset(self):
         preset_data = self._current_preset_data
-        self.on_preset_changed(preset_data)
+        try:
+            self.on_preset_changed(preset_data.get_preset())
+        except InvalidPreset as e:
+            QMessageBox.warning(
+                self._window_manager,
+                "Incompatible Preset",
+                f"Preset {preset_data.name} can't be used as it contains the following error:\n{e.original_exception}"
+            )
+            self.window.create_preset_combo.setCurrentIndex(0)
+            self.on_preset_changed(self._window_manager.preset_manager.default_preset.get_preset())
+            return
+
         with self._options as options:
             options.selected_preset_name = preset_data.name
 
@@ -182,7 +199,7 @@ class GenerateSeedTab(QWidget):
             seed_number=random.randint(0, 2 ** 31),
             spoiler=spoiler,
             presets={
-                i: preset
+                i: preset.get_preset()
                 for i in range(num_players)
             },
         ))
@@ -195,29 +212,32 @@ class GenerateSeedTab(QWidget):
                                                             options=self._options)
                 progress_update(f"Success! (Seed hash: {layout.shareable_hash})", 1)
                 persist_layout(self._options.data_dir, layout)
-                self._window_manager.show_seed_tab(layout)
+                self._window_manager.open_game_details(layout)
 
             except GenerationFailure as generate_exception:
                 self.failed_to_generate_signal.emit(generate_exception)
                 progress_update("Generation Failure: {}".format(generate_exception), -1)
 
-        self.background_processor.run_in_background_thread(work, "Creating a seed...")
+        self.run_in_background_thread(work, "Creating a seed...")
 
     def on_options_changed(self, options: Options):
-        if self._current_preset is None:
+        if not self._has_preset:
             preset_name = options.selected_preset_name
             if preset_name is not None:
                 index = self.window.create_preset_combo.findText(preset_name)
                 if index != -1:
                     self.window.create_preset_combo.setCurrentIndex(index)
-                    self.on_preset_changed(self._current_preset_data)
-                    return
+                    try:
+                        self.on_preset_changed(self._current_preset_data.get_preset())
+                        return
+                    except InvalidPreset:
+                        pass
 
             self.window.create_preset_combo.setCurrentIndex(0)
-            self.on_preset_changed(self._window_manager.preset_manager.default_preset)
+            self.on_preset_changed(self._window_manager.preset_manager.default_preset.get_preset())
 
     def on_preset_changed(self, preset: Preset):
-        self._current_preset = preset
+        self._has_preset = True
 
         self.window.create_preset_description.setText(preset.description)
         self._action_delete.setEnabled(preset.base_preset_name is not None)
@@ -231,3 +251,13 @@ class GenerateSeedTab(QWidget):
 
         self.window.create_describe_left_label.setText(preset_describer.merge_categories(left_categories))
         self.window.create_describe_right_label.setText(preset_describer.merge_categories(right_categories))
+
+    def update_progress(self, message: str, percentage: int):
+        self.window.progress_label.setText(message)
+        if "Aborted" in message:
+            percentage = 0
+        if percentage >= 0:
+            self.window.progress_bar.setRange(0, 100)
+            self.window.progress_bar.setValue(percentage)
+        else:
+            self.window.progress_bar.setRange(0, 0)

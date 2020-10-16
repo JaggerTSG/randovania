@@ -5,7 +5,7 @@ import pytest
 from randovania.game_description import game_description
 from randovania.game_description.area import Area
 from randovania.game_description.node import Node
-from randovania.game_description.requirements import RequirementSet, Requirement
+from randovania.game_description.requirements import Requirement
 
 
 @pytest.mark.parametrize(["danger_a", "danger_b", "expected_result"], [
@@ -26,7 +26,7 @@ def test_calculate_dangerous_resources(danger_a, danger_b, expected_result):
     n2: Node = "n2"
 
     area_a = Area(
-        "area_a", False, 0, 0, [n1, n2],
+        "area_a", False, 0, 0, True, [n1, n2],
         {
             n1: {
                 n2: set_a
@@ -35,7 +35,7 @@ def test_calculate_dangerous_resources(danger_a, danger_b, expected_result):
         }
     )
     area_b = Area(
-        "area_b", True, 0, 0, [n1, n2],
+        "area_b", True, 0, 0, True, [n1, n2],
         {
             n1: {},
             n2: {

@@ -1,7 +1,7 @@
 import dataclasses
 import pprint
 from random import Random
-from typing import Tuple, List, Iterator
+from typing import Tuple, List
 
 import pytest
 
@@ -10,10 +10,9 @@ from randovania.game_description.area import Area
 from randovania.game_description.dock import DockWeaknessDatabase
 from randovania.game_description.echoes_game_specific import EchoesGameSpecific
 from randovania.game_description.game_description import GameDescription
-from randovania.game_description.node import ResourceNode, Node, PickupNode, GenericNode, TranslatorGateNode
+from randovania.game_description.node import ResourceNode, GenericNode, TranslatorGateNode
 from randovania.game_description.requirements import Requirement
 from randovania.game_description.resources.resource_info import add_resources_into_another
-from randovania.game_description.resources.resource_type import ResourceType
 from randovania.game_description.resources.translator_gate import TranslatorGate
 from randovania.game_description.world import World
 from randovania.game_description.world_list import WorldList
@@ -29,20 +28,14 @@ from randovania.resolver.bootstrap import logic_bootstrap
 from randovania.resolver.state import State, add_pickup_to_state
 
 
-def _filter_pickups(nodes: Iterator[Node]) -> Iterator[PickupNode]:
-    for node in nodes:
-        if isinstance(node, PickupNode):
-            yield node
-
-
 @pytest.fixture(name="test_data")
-def _test_data(preset_manager):
+def _test_data(default_preset):
     data = default_data.decode_default_prime2()
     game = data_reader.decode_data(data)
     permalink = Permalink(
         seed_number=15000,
         spoiler=True,
-        presets={0: preset_manager.default_preset},
+        presets={0: default_preset},
     )
     configuration = permalink.get_preset(0).layout_configuration
     patches = game.create_game_patches()
@@ -109,16 +102,16 @@ def test_calculate_reach_with_all_pickups(test_data):
 @pytest.mark.parametrize("has_translator", [False, True])
 def test_basic_search_with_translator_gate(has_translator: bool, echoes_resource_database):
     # Setup
-    scan_visor = echoes_resource_database.get_by_type_and_index(ResourceType.ITEM, 10)
+    scan_visor = echoes_resource_database.get_item(10)
 
-    node_a = GenericNode("Node A", True, 0)
-    node_b = GenericNode("Node B", True, 1)
-    node_c = GenericNode("Node C", True, 2)
-    translator_node = TranslatorGateNode("Translator Gate", True, 3, TranslatorGate(1), scan_visor)
+    node_a = GenericNode("Node A", True, None, 0)
+    node_b = GenericNode("Node B", True, None, 1)
+    node_c = GenericNode("Node C", True, None, 2)
+    translator_node = TranslatorGateNode("Translator Gate", True, None, 3, TranslatorGate(1), scan_visor)
 
     world_list = WorldList([
         World("Test World", "Test Dark World", 1, [
-            Area("Test Area A", False, 10, 0, [node_a, node_b, node_c, translator_node],
+            Area("Test Area A", False, 10, 0, True, [node_a, node_b, node_c, translator_node],
                  {
                      node_a: {
                          node_b: Requirement.trivial(),
@@ -138,7 +131,7 @@ def test_basic_search_with_translator_gate(has_translator: bool, echoes_resource
                  )
         ])
     ])
-    game_specific = EchoesGameSpecific(energy_per_tank=100, beam_configurations=())
+    game_specific = EchoesGameSpecific(energy_per_tank=100, safe_zone_heal_per_second=1, beam_configurations=())
     game = GameDescription(0, "", DockWeaknessDatabase([], [], [], []),
                            echoes_resource_database, game_specific, Requirement.impossible(),
                            None, {}, world_list)

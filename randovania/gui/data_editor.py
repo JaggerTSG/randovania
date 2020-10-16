@@ -4,19 +4,24 @@ import re
 from pathlib import Path
 from typing import Dict, Optional
 
+from PySide2 import QtGui
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QMainWindow, QRadioButton, QGridLayout, QDialog, QFileDialog, QInputDialog, QMessageBox
+from asyncqt import asyncSlot
 
-from randovania.game_description import data_reader, data_writer
+from randovania.game_description import data_reader, data_writer, pretty_print
 from randovania.game_description.area import Area
 from randovania.game_description.node import Node, DockNode, TeleporterNode, GenericNode
 from randovania.game_description.requirements import Requirement
 from randovania.game_description.world import World
+from randovania.games.game import RandovaniaGame
 from randovania.games.prime import default_data
-from randovania.gui.lib.connections_visualizer import ConnectionsVisualizer
 from randovania.gui.dialog.connections_editor import ConnectionsEditor
+from randovania.gui.dialog.node_details_popup import NodeDetailsPopup
 from randovania.gui.generated.data_editor_ui import Ui_DataEditorWindow
+from randovania.gui.lib import async_dialog
 from randovania.gui.lib.common_qt_lib import set_default_window_icon
+from randovania.gui.lib.connections_visualizer import ConnectionsVisualizer
 
 
 class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
@@ -26,12 +31,16 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
     _area_with_displayed_connections: Optional[Area] = None
     _previous_selected_node: Optional[Node] = None
     _connections_visualizer: Optional[ConnectionsVisualizer] = None
+    _edit_popup: Optional[QDialog] = None
 
-    def __init__(self, data: dict, edit_mode: bool):
+    def __init__(self, data: dict, data_path: Optional[Path], is_internal: bool, edit_mode: bool):
         super().__init__()
         self.setupUi(self)
         set_default_window_icon(self)
 
+        self._is_internal = is_internal
+        self._data_path = data_path
+        self._last_data = data
         self.edit_mode = edit_mode
         self.radio_button_to_node = {}
 
@@ -39,11 +48,15 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         self.area_selector_box.currentIndexChanged.connect(self.on_select_area)
         self.node_details_label.linkActivated.connect(self._on_click_link_to_other_node)
         self.node_heals_check.stateChanged.connect(self.on_node_heals_check)
+        self.node_edit_button.clicked.connect(self.on_node_edit_button)
         self.other_node_connection_edit_button.clicked.connect(self._open_edit_connection)
 
-        self.save_database_button.setEnabled(default_data.prime2_json_path().is_file())
-        self.save_database_button.clicked.connect(self._save_as_internal_database)
-        self.menu_export_database.triggered.connect(self._prompt_save_database)
+        self.save_database_button.setEnabled(data_path is not None)
+        if self._is_internal:
+            self.save_database_button.clicked.connect(self._save_as_internal_database)
+        else:
+            self.save_database_button.clicked.connect(self._prompt_save_database)
+
         self.new_node_button.clicked.connect(self._create_new_node)
         self.delete_node_button.clicked.connect(self._remove_node)
         self.verticalLayout.setAlignment(Qt.AlignTop)
@@ -56,9 +69,32 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         self.world_list = self.game_description.world_list
 
         for world in sorted(self.world_list.worlds, key=lambda x: x.name):
-            self.world_selector_box.addItem("{0.name} ({0.dark_name})".format(world), userData=world)
+            name = "{0.name} ({0.dark_name})".format(world) if world.dark_name else world.name
+            self.world_selector_box.addItem(name, userData=world)
 
         self.update_edit_mode()
+
+    @classmethod
+    def open_internal_data(cls, game: RandovaniaGame, edit_mode: bool) -> "DataEditorWindow":
+        default_data.read_json_then_binary.cache_clear()
+        path, data = default_data.read_json_then_binary(game)
+        if path.suffix == ".bin":
+            path = None
+        return DataEditorWindow(data, path, True, edit_mode)
+
+    def closeEvent(self, event: QtGui.QCloseEvent):
+        if self._check_for_edit_dialog():
+            event.ignore()
+        else:
+            data = data_writer.write_game_description(self.game_description)
+            if data != self._last_data:
+                user_response = QMessageBox.warning(self, "Unsaved changes",
+                                                    "You have unsaved changes. Do you want to close and discard?",
+                                                    QMessageBox.Yes | QMessageBox.No,
+                                                    QMessageBox.No)
+                if user_response == QMessageBox.No:
+                    return event.ignore()
+            super().closeEvent(event)
 
     def on_select_world(self):
         self.area_selector_box.clear()
@@ -111,11 +147,21 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         self.area_selector_box.setCurrentIndex(self.area_selector_box.findText(area_name))
 
     def _on_click_link_to_other_node(self, link: str):
+        world_name, area_name, node_name = None, None, None
+
         info = re.match(r"^node://([^/]+)/([^/]+)/(.+)$", link)
         if info:
             world_name, area_name, node_name = info.group(1, 2, 3)
+        else:
+            info = re.match(r"^area://([^/]+)/([^/]+)$", link)
+            world_name, area_name = info.group(1, 2)
+
+        if world_name is not None and area_name is not None:
             self.focus_on_world(world_name)
             self.focus_on_area(area_name)
+            if node_name is None and self.current_area.default_node_index is not None:
+                node_name = self.current_area.nodes[self.current_area.default_node_index].name
+            
             for radio_button in self.radio_button_to_node.keys():
                 if radio_button.text() == node_name:
                     radio_button.setChecked(True)
@@ -125,22 +171,71 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         assert old_node is not None
 
         new_node = dataclasses.replace(old_node, heal=bool(state))
+        self.replace_node_with(self.current_area, old_node, new_node)
 
-        if new_node != old_node:
-            area_node_list = self.current_area.nodes
-            for i, node in enumerate(area_node_list):
-                if node == old_node:
-                    area_node_list[i] = new_node
+    def replace_node_with(self, area: Area, old_node: Node, new_node: Node):
+        if old_node == new_node:
+            return
 
-            area_connections = self.current_area.connections
-            area_connections[new_node] = area_connections.pop(old_node)
+        def sub(n: Node):
+            return new_node if n == old_node else n
 
-            for node_connections in area_connections.values():
-                if old_node in node_connections:
-                    node_connections[new_node] = node_connections.pop(old_node)
+        area_node_list = area.nodes
+        for i, node in enumerate(area_node_list):
+            if node == old_node:
+                area_node_list[i] = new_node
 
-            self.radio_button_to_node[self.selected_node_button] = new_node
+        new_connections = {
+            sub(source_node): {
+                sub(target_node): requirements
+                for target_node, requirements in connection.items()
+            }
+            for source_node, connection in area.connections.items()
+        }
+        area.connections.clear()
+        area.connections.update(new_connections)
+        self.game_description.world_list.refresh_node_cache()
+
+        if area == self.current_area:
+            radio = next(key for key, value in self.radio_button_to_node.items() if value == old_node)
+            radio.setText(new_node.name)
+            self.radio_button_to_node[radio] = new_node
             self.update_selected_node()
+
+    def _check_for_edit_dialog(self) -> bool:
+        """
+        If an edit popup exists, raises it and returns True.
+        Otherwise, just return False.
+        :return:
+        """
+        if self._edit_popup is not None:
+            self._edit_popup.raise_()
+            return True
+        else:
+            return False
+
+    async def _execute_edit_dialog(self, dialog: QDialog):
+        self._edit_popup = dialog
+        try:
+            result = await async_dialog.execute_dialog(self._edit_popup)
+            return result == QDialog.Accepted
+        finally:
+            self._edit_popup = None
+
+    @asyncSlot()
+    async def on_node_edit_button(self):
+        if self._check_for_edit_dialog():
+            return
+
+        area = self.current_area
+        node_edit_popup = NodeDetailsPopup(self.game_description, self.current_node)
+        if await self._execute_edit_dialog(node_edit_popup):
+            try:
+                new_node = node_edit_popup.create_new_node()
+            except ValueError as e:
+                await async_dialog.warning(self, "Error in new node", str(e))
+                return
+            self.replace_node_with(area, node_edit_popup.node, new_node)
 
     def update_selected_node(self):
         node = self.current_node
@@ -148,22 +243,23 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
 
         self.node_heals_check.setChecked(node.heal)
 
+        msg = pretty_print.pretty_print_node_type(node, self.world_list)
         if isinstance(node, DockNode):
-            other = self.world_list.resolve_dock_connection(self.current_world, node.default_connection)
-            msg = "{} to <a href=\"node://{}\">{}</a>".format(
-                node.default_dock_weakness.name,
-                self.world_list.node_name(other, with_world=True),
-                self.world_list.node_name(other)
-            )
-
-        elif node.is_resource_node:
-            msg = str(node)
+            try:
+                other = self.world_list.resolve_dock_connection(self.current_world, node.default_connection)
+                msg = "{} to <a href=\"node://{}\">{}</a>".format(
+                    node.default_dock_weakness.name,
+                    self.world_list.node_name(other, with_world=True),
+                    self.world_list.node_name(other)
+                )
+            except IndexError:
+                pass
 
         elif isinstance(node, TeleporterNode):
-            other = self.world_list.resolve_teleporter_connection(node.default_connection)
-            msg = "Connects to <a href=\"node://{0}\">{0}</a>".format(self.world_list.node_name(other, with_world=True))
-        else:
-            msg = ""
+            other = self.world_list.area_by_area_location(node.default_connection)
+            name = self.world_list.area_name(other, separator="/", distinguish_dark_aether=False)
+            pretty_name = msg.replace("Teleporter to ", "")
+            msg = f'Teleporter to <a href="area://{name}">{pretty_name}</a>'
 
         self.node_name_label.setText(node.name)
         self.node_details_label.setText(msg)
@@ -234,18 +330,19 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
             False
         )
 
-    def _open_edit_connection(self):
+    @asyncSlot()
+    async def _open_edit_connection(self):
+        if self._check_for_edit_dialog():
+            return
+
         from_node = self.current_node
         target_node = self.current_connection_node
-
         assert from_node is not None
         assert target_node is not None
 
         requirement = self.current_area.connections[from_node].get(target_node, Requirement.impossible())
         editor = ConnectionsEditor(self, self.resource_database, requirement)
-        result = editor.exec_()
-
-        if result == QDialog.Accepted:
+        if await self._execute_edit_dialog(editor):
             self._apply_edit_connections(from_node, target_node, editor.final_requirement)
 
     def _apply_edit_connections(self, from_node: Node, target_node: Node,
@@ -273,15 +370,16 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         data = data_writer.write_game_description(self.game_description)
         with path.open("w") as open_file:
             json.dump(data, open_file, indent=4)
+        self._last_data = data
 
     def _save_as_internal_database(self):
-        self._save_database(default_data.prime2_json_path())
-        with default_data.prime2_human_readable_path().open("w", encoding="utf-8") as output:
-            data_writer.write_human_readable_world_list(self.game_description, output)
+        self._save_database(self._data_path)
+        with self._data_path.with_suffix(".txt").open("w", encoding="utf-8") as output:
+            pretty_print.write_human_readable_world_list(self.game_description, output)
 
     def _create_new_node(self):
         node_name, did_confirm = QInputDialog.getText(self, "New Node", "Insert node name:")
-        if not did_confirm:
+        if not did_confirm or node_name == "":
             return
 
         if self.current_area.node_with_name(node_name) is not None:
@@ -294,7 +392,7 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
 
     def _do_create_node(self, node_name: str):
         self.generic_index += 1
-        new_node = GenericNode(node_name, True, self.generic_index)
+        new_node = GenericNode(node_name, False, None, self.generic_index)
         self.current_area.nodes.append(new_node)
         self.current_area.connections[new_node] = {}
         self.game_description.world_list.refresh_node_cache()
@@ -302,6 +400,9 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         self.on_select_area()
 
     def _remove_node(self):
+        if self._check_for_edit_dialog():
+            return
+
         current_node = self.current_node
 
         if not isinstance(current_node, GenericNode):
@@ -327,12 +428,12 @@ class DataEditorWindow(QMainWindow, Ui_DataEditorWindow):
         self.on_select_area()
 
     def update_edit_mode(self):
-        self.menu_bar.setVisible(self.edit_mode)
         self.delete_node_button.setVisible(self.edit_mode)
         self.new_node_button.setVisible(self.edit_mode)
         self.save_database_button.setVisible(self.edit_mode)
         self.other_node_connection_edit_button.setVisible(self.edit_mode)
         self.node_heals_check.setEnabled(self.edit_mode)
+        self.node_edit_button.setVisible(self.edit_mode)
 
     @property
     def current_world(self) -> World:

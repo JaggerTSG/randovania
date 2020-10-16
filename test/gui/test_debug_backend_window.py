@@ -1,10 +1,12 @@
 import pytest
 from PySide2.QtCore import Qt
+from mock import patch, MagicMock, AsyncMock
 
 from randovania.game_connection.connection_backend import ConnectionStatus
 from randovania.game_description.item.item_category import ItemCategory
 from randovania.game_description.resources.pickup_entry import PickupEntry, ConditionalResources
-from randovania.gui.debug_backend_window import DebugBackendWindow, iterate_enum
+from randovania.gui.debug_backend_window import DebugBackendWindow
+from randovania.interface_common.enum_lib import iterate_enum
 
 
 @pytest.fixture(name="backend")
@@ -18,6 +20,7 @@ def _pickup() -> PickupEntry:
         name="Pickup",
         model_index=0,
         item_category=ItemCategory.MOVEMENT,
+        broad_category=ItemCategory.LIFE_SUPPORT,
         resources=(
             ConditionalResources(None, None, ()),
         ),
@@ -32,10 +35,9 @@ def test_current_status(backend, expected_status):
     assert backend.current_status == expected_status
 
 
-@pytest.mark.asyncio
-async def test_display_message(backend):
+def test_display_message(backend):
     message = "Foo"
-    await backend.display_message(message)
+    backend.display_message(message)
     assert backend.messages_list.findItems(message, Qt.MatchFlag.MatchExactly)
 
 
@@ -55,8 +57,23 @@ def test_set_permanent_pickups(backend, pickup):
 
 
 @pytest.mark.asyncio
-async def test_setup_locations_combo(backend):
+@patch("randovania.gui.lib.common_qt_lib.get_network_client", autospec=True)
+async def test_setup_locations_combo(mock_get_network_client: MagicMock,
+                                     backend):
+    # Setup
+    patcher_data = {
+        "pickups": [
+            {"pickup_index": i, "hud_text": f"Item {i}"}
+            for i in range(110)
+        ]
+    }
+    mock_get_network_client.return_value.session_admin_player = AsyncMock(return_value=patcher_data)
+
+    # Run
     await backend._setup_locations_combo()
+
+    # Assert
+    mock_get_network_client.assert_called_once_with()
     assert backend.collect_location_combo.count() > 100
 
 

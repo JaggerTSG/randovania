@@ -1,10 +1,8 @@
 image: Visual Studio 2017
 
 branches:
-  # blacklist
-  except:
-    - gh-pages
-    - travis
+  only:
+    - master
 
 environment:
 
@@ -22,7 +20,7 @@ install:
   - set PATH=%PYTHON%\Scripts;%PATH%
   - "%PYTHON%\\python.exe -m pip install --upgrade -r requirements-setuptools.txt"
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
-  - "%PYTHON%\\python.exe -m pip install -e . -e .[gui] -e .[test]"
+  - "%PYTHON%\\python.exe -m pip install -e . -e .[gui] -e .[server] -e .[test]"
   - "%PYTHON%\\python.exe -m pip install codecov"
 
 build: off

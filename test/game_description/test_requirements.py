@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from randovania.game_description import data_reader
 from randovania.game_description.requirements import ResourceRequirement, RequirementList, RequirementSet, \
     RequirementAnd, RequirementOr, Requirement, MAX_DAMAGE, RequirementTemplate
 from randovania.game_description.resources.resource_database import ResourceDatabase
@@ -24,9 +25,6 @@ def _database() -> ResourceDatabase:
         misc=[
             SimpleResourceInfo(0, "Trivial", "Trivial", ""),
             SimpleResourceInfo(1, "Impossible", "Impossible", ""),
-        ],
-        difficulty=[
-            SimpleResourceInfo(0, "Difficulty", "Difficulty", ""),
         ],
         requirement_template={},
     )
@@ -250,7 +248,7 @@ def test_impossible_requirement_satisfied():
 
 
 def test_impossible_requirement_damage():
-    assert Requirement.impossible().damage({}, 99990) == MAX_DAMAGE
+    assert Requirement.impossible().damage({}) == MAX_DAMAGE
 
 
 def test_impossible_requirement_str():
@@ -266,7 +264,7 @@ def test_trivial_requirement_satisfied():
 
 
 def test_trivial_requirement_damage():
-    assert Requirement.trivial().damage({}, 99990) == 0
+    assert Requirement.trivial().damage({}) == 0
 
 
 def test_trivial_requirement_str():
@@ -333,6 +331,58 @@ def test_trivial_requirement_str():
                 ]),
             ]),
     ),
+    (
+            RequirementOr([
+                _req("A"),
+                _req("A"),
+            ]),
+            _req("A"),
+    ),
+    (
+            RequirementAnd([
+                _req("A"),
+                _req("A"),
+            ]),
+            _req("A"),
+    ),
+    (
+            RequirementOr([
+                RequirementAnd([
+                    _req("A"),
+                    RequirementOr([
+                        _req("A"),
+                        RequirementOr([_req("A")])
+                    ])
+                ]),
+                RequirementAnd([
+                    _req("A"),
+                    RequirementOr([
+                        _req("A"),
+                        RequirementOr([]),
+                    ]),
+                ]),
+            ]),
+            _req("A"),
+    ),
+    (
+            RequirementOr([
+                RequirementAnd([
+                    _req("A"),
+                    RequirementOr([
+                        _req("A"),
+                        RequirementOr([_req("A")])
+                    ])
+                ]),
+                RequirementAnd([
+                    _req("A"),
+                    RequirementOr([
+                        _req("A"),
+                        RequirementOr([_req("A")]),
+                    ])
+                ])
+            ]),
+            _req("A"),
+    )
 ])
 def test_simplified_requirement(original, expected):
     simplified = original.simplify()
@@ -350,6 +400,7 @@ def test_requirement_template(database):
 
     # Assert
     assert as_set == make_single_set(_make_req("A"))
+    assert hash(use_a)
 
 
 def test_requirement_template_nested(database):
@@ -368,3 +419,46 @@ def test_requirement_template_nested(database):
         RequirementList([_req("A")]),
         RequirementList([_req("B")]),
     ])
+    assert hash(use_a) != hash(use_b)
+
+
+def _json_req(amount: int, index: int = 1, resource_type: int = 3):
+    return {"type": "resource", "data": {"type": resource_type, "index": index, "amount": amount, "negate": False}}
+
+
+@pytest.mark.parametrize(["damage", "items", "requirement"], [
+    (50, [], {"type": "and", "data": [_json_req(50)]}),
+    (MAX_DAMAGE, [], {"type": "and", "data": [_json_req(1, resource_type=0)]}),
+    (80, [], {"type": "and", "data": [_json_req(50), _json_req(30)]}),
+    (30, [], {"type": "or", "data": [_json_req(50), _json_req(30)]}),
+    (50, [], {"type": "or", "data": [_json_req(50), _json_req(1, resource_type=0)]}),
+    (0, [1], {"type": "or", "data": [_json_req(50), _json_req(1, resource_type=0)]}),
+    (100, [], {"type": "or", "data": [
+        _json_req(100),
+        {"type": "and", "data": [_json_req(50), _json_req(1, resource_type=0)]},
+    ]}),
+    (50, [1], {"type": "or", "data": [
+        _json_req(100),
+        {"type": "and", "data": [_json_req(50), _json_req(1, resource_type=0)]},
+    ]}),
+    (150, [], {"type": "and", "data": [
+        _json_req(100),
+        {"type": "or", "data": [_json_req(50), _json_req(1, resource_type=0)]},
+    ]}),
+    (100, [1], {"type": "and", "data": [
+        _json_req(100),
+        {"type": "or", "data": [_json_req(50), _json_req(1, resource_type=0)]},
+    ]}),
+    (200, [], {"type": "and", "data": [_json_req(100), _json_req(100, 2)]}),
+    (121, [13], {"type": "and", "data": [_json_req(100), _json_req(100, 2)]}),
+    (100, [14], {"type": "and", "data": [_json_req(100), _json_req(100, 2)]}),
+])
+def test_requirement_damage(damage, items, requirement, echoes_resource_database):
+    req = data_reader.read_requirement(requirement, echoes_resource_database)
+
+    resources = {
+        echoes_resource_database.get_item(item): 1
+        for item in items
+    }
+
+    assert req.damage(resources) == damage

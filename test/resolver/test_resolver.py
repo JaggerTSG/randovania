@@ -1,6 +1,5 @@
 import pytest
 
-from randovania.game_description import data_reader
 from randovania.layout.layout_description import LayoutDescription
 from randovania.resolver import resolver, debug
 
@@ -10,7 +9,7 @@ def test_resolver_with_log_file(test_files_dir):
     # Setup
     debug.set_level(0)
 
-    description = LayoutDescription.from_file(test_files_dir.joinpath("log_files", "seed_a.json"))
+    description = LayoutDescription.from_file(test_files_dir.joinpath("log_files", "seed_a.rdvgame"))
     configuration = description.permalink.presets[0].layout_configuration
     patches = description.all_patches[0]
 

@@ -1,19 +1,16 @@
 import asyncio
+import locale
+import logging.config
 import os
 import sys
 from argparse import ArgumentParser
+from pathlib import Path
 
 from PySide2 import QtCore
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication, QMessageBox, QWidget
+from PySide2.QtWidgets import QApplication, QMessageBox
 from asyncqt import asyncClose
 
-from randovania.game_connection.dolphin_backend import DolphinBackend
-from randovania.game_connection.game_connection import GameConnection
-from randovania.gui.debug_backend_window import DebugBackendWindow
-from randovania.interface_common.options import Options, DecodeFailedException
-from randovania.interface_common.preset_manager import PresetManager, InvalidPreset
-from randovania.layout.preset import Preset
+from randovania.gui.lib import theme
 
 
 def catch_exceptions(t, val, tb):
@@ -27,133 +24,157 @@ def catch_exceptions(t, val, tb):
 old_hook = sys.excepthook
 
 
-def load_options_from_disk(options: Options) -> bool:
-    parent: QWidget = None
-    try:
-        options.load_from_disk()
-        return True
-
-    except DecodeFailedException as decode_failed:
-        user_response = QMessageBox.critical(
-            parent,
-            "Error loading previous settings",
-            ("The following error occurred while restoring your settings:\n"
-             "{}\n\n"
-             "Do you want to reset this part of your settings?").format(decode_failed),
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-        if user_response == QMessageBox.Yes:
-            options.load_from_disk(True)
-            return True
-        else:
-            return False
+def catch_exceptions_async(loop, context):
+    if 'future' in context:
+        future: asyncio.Future = context['future']
+        logging.exception(context["message"], exc_info=future.exception())
+    else:
+        logging.critical(str(context))
 
 
-def load_user_presets(preset_manager: PresetManager) -> bool:
-    parent: QWidget = None
-    try:
-        preset_manager.load_user_presets(False)
-        return True
-
-    except InvalidPreset as invalid_file:
-        user_response = QMessageBox.critical(
-            parent,
-            "Error loading saved preset",
-            ("An error happened when loading the preset '{}'.\n\n"
-             "Do you want to delete this preset? Say No to ignore all invalid presets in this session."
-             ).format(invalid_file.file.stem),
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-            QMessageBox.No
-        )
-        if user_response == QMessageBox.Yes:
-            os.remove(invalid_file.file)
-            return load_user_presets(preset_manager)
-        elif user_response == QMessageBox.No:
-            preset_manager.load_user_presets(True)
-            return True
-        else:
-            return False
-
-
-def show_main_window(app: QApplication, is_preview: bool):
-    options = Options.with_default_data_dir()
+async def show_main_window(app: QApplication, options, is_preview: bool):
+    from randovania.interface_common.preset_manager import PresetManager
     preset_manager = PresetManager(options.data_dir)
 
-    for old_preset in options.data_dir.joinpath("presets").glob("*.randovania_preset"):
-        old_preset.rename(old_preset.with_name(f"{old_preset.stem}.{Preset.file_extension()}"))
-
-    if not load_options_from_disk(options):
-        raise SystemExit(1)
-
-    if not load_user_presets(preset_manager):
-        raise SystemExit(2)
+    await preset_manager.load_user_presets()
 
     from randovania.gui.main_window import MainWindow
-    main_window = MainWindow(options, preset_manager, is_preview)
+    main_window = MainWindow(options, preset_manager, app.network_client, is_preview)
     app.main_window = main_window
     main_window.show()
-    main_window.request_new_data()
-
-
-def show_data_editor(app: QApplication):
-    from randovania.games.prime import default_data
-    from randovania.gui.data_editor import DataEditorWindow
-
-    app.data_visualizer = DataEditorWindow(default_data.decode_default_prime2(), True)
-    app.data_visualizer.show()
+    await main_window.request_new_data()
 
 
 def show_tracker(app: QApplication):
-    from randovania.gui.tracker_window import TrackerWindow
+    from randovania.gui.auto_tracker_window import AutoTrackerWindow
 
-    options = Options.with_default_data_dir()
-    if not load_options_from_disk(options):
-        raise SystemExit(1)
-
-    app.tracker = TrackerWindow(options.tracker_files_path, options.selected_preset.layout_configuration)
+    app.tracker = AutoTrackerWindow(app.game_connection)
     app.tracker.show()
 
 
-def run(args):
-    QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+def show_game_details(app: QApplication, options, game: Path):
+    from randovania.layout.layout_description import LayoutDescription
+    from randovania.gui.seed_details_window import SeedDetailsWindow
 
-    app = QApplication(sys.argv)
-    preview: bool = getattr(args, "preview", False)
+    layout = LayoutDescription.from_file(game)
+    details_window = SeedDetailsWindow(None, options)
+    details_window.update_layout_description(layout)
+    details_window.show()
+    app.details_window = details_window
 
-    os.environ['QT_API'] = "PySide2"
-    import asyncqt
-    loop = asyncqt.QEventLoop(app)
-    asyncio.set_event_loop(loop)
 
-    sys.excepthook = catch_exceptions
+async def display_window_for(app, options, command: str, args):
+    if command == "tracker":
+        show_tracker(app)
+    elif command == "main":
+        await show_main_window(app, options, args.preview)
+    elif command == "game":
+        show_game_details(app, options, args.rdvgame)
+    else:
+        raise RuntimeError(f"Unknown command: {command}")
 
-    app.game_connection = GameConnection()
 
-    if getattr(args, "debug_game_backend", False):
+def create_backend(debug_game_backend: bool):
+    if debug_game_backend:
+        from randovania.gui.debug_backend_window import DebugBackendWindow
         backend = DebugBackendWindow()
         backend.show()
     else:
+        from randovania.game_connection.dolphin_backend import DolphinBackend
         backend = DolphinBackend()
+    return backend
 
+
+def _load_options():
+    from randovania.interface_common.options import Options
+    from randovania.gui.lib import startup_tools
+
+    options = Options.with_default_data_dir()
+    if not startup_tools.load_options_from_disk(options):
+        raise SystemExit(1)
+
+    theme.set_dark_theme(options.dark_mode)
+
+    from randovania.layout.preset_migration import VersionedPreset
+    for old_preset in options.data_dir.joinpath("presets").glob("*.randovania_preset"):
+        old_preset.rename(old_preset.with_name(f"{old_preset.stem}.{VersionedPreset.file_extension()}"))
+
+    return options
+
+
+def run(args):
+    locale.setlocale(locale.LC_ALL, "")  # use system's default locale
+    QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+
+    data_dir = args.custom_network_storage
+    if data_dir is None:
+        from randovania.interface_common import persistence
+        data_dir = persistence.user_data_dir()
+
+    # Ensure the log dir exists early on
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    is_preview = args.preview
+    logging.config.dictConfig({
+        'version': 1,
+        'formatters': {
+            'default': {
+                'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+            }
+        },
+        'handlers': {
+            'default': {
+                'level': 'DEBUG' if is_preview else 'INFO',
+                'formatter': 'default',
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout',  # Default is stderr
+            },
+            'local_app_data': {
+                'level': 'INFO',
+                'formatter': 'default',
+                'class': 'logging.FileHandler',
+                'filename': data_dir.joinpath("app.log"),
+                'encoding': 'utf-8',
+            }
+        },
+        'root': {
+            'level': 'WARNING',
+            'handlers': ['default', 'local_app_data'],
+        }
+    })
+
+    app = QApplication(sys.argv)
+
+    os.environ['QT_API'] = "PySide2"
+    import asyncqt
+    loop: asyncio.AbstractEventLoop = asyncqt.QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    sys.excepthook = catch_exceptions
+    loop.set_exception_handler(catch_exceptions_async)
+
+    from randovania.gui.lib.qt_network_client import QtNetworkClient
+    from randovania.game_connection.game_connection import GameConnection
+
+    app.network_client = QtNetworkClient(data_dir)
+    app.game_connection = GameConnection()
+
+    backend = create_backend(args.debug_game_backend)
     app.game_connection.set_backend(backend)
 
     @asyncClose
     async def _on_last_window_closed():
+        await app.network_client.disconnect_from_server()
         await app.game_connection.stop()
 
-    app.lastWindowClosed.connect(_on_last_window_closed, Qt.QueuedConnection)
+    app.lastWindowClosed.connect(_on_last_window_closed, QtCore.Qt.QueuedConnection)
 
-    target_window = getattr(args, "window", None)
-    if target_window == "data-editor":
-        show_data_editor(app)
-    elif target_window == "tracker":
-        show_tracker(app)
-    else:
-        show_main_window(app, preview)
+    options = _load_options()
 
     with loop:
         loop.create_task(app.game_connection.start())
+        loop.create_task(display_window_for(app, options, args.command, args))
+        # loop.create_task(app.network_client.connect_if_authenticated())
         sys.exit(loop.run_forever())
 
 
@@ -163,10 +184,20 @@ def create_subparsers(sub_parsers):
         help="Run the Graphical User Interface"
     )
     parser.add_argument("--preview", action="store_true", help="Activates preview features")
+    parser.add_argument("--custom-network-storage", type=Path, help="Use a custom path to store the network login.")
     parser.add_argument("--debug-game-backend", action="store_true", help="Opens the debug game backend.")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--data-editor", action="store_const", dest="window", const="data-editor",
-                       help="Opens only data editor window")
-    group.add_argument("--tracker", action="store_const", dest="window", const="tracker",
-                       help="Opens only the tracker window")
-    parser.set_defaults(func=run)
+
+    gui_parsers = parser.add_subparsers(dest="command")
+    gui_parsers.add_parser("main", help="Displays the Main Window").set_defaults(func=run)
+    gui_parsers.add_parser("tracker", help="Opens only the auto tracker").set_defaults(func=run)
+
+    game_parser = gui_parsers.add_parser("game", help="Opens an rdvgame")
+    game_parser.add_argument("rdvgame", type=Path, help="Path ")
+    game_parser.set_defaults(func=run)
+
+    def check_command(args):
+        if args.command is None:
+            parser.print_help()
+            raise SystemExit(1)
+
+    parser.set_defaults(func=check_command)
