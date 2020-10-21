@@ -1,6 +1,6 @@
 import collections
 import itertools
-from typing import List
+from typing import List, Optional
 
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import QMainWindow
@@ -50,6 +50,10 @@ class DebugBackendWindow(ConnectionBackend, Ui_DebugBackendWindow):
     def current_status(self) -> ConnectionStatus:
         return self.current_status_combo.currentData()
 
+    @property
+    def lock_identifier(self) -> Optional[str]:
+        return None
+
     def display_message(self, message: str):
         self.messages_list.addItem(message)
 
@@ -69,8 +73,8 @@ class DebugBackendWindow(ConnectionBackend, Ui_DebugBackendWindow):
         for pickup in itertools.chain(self.pickups, self.permanent_pickups):
             inventory[pickup.name] += 1
 
-        self.inventory_label.setText("<br />".join(
-            f"{name} x{quantity}" for name, quantity in sorted(inventory.items())
+        self.inventory_label.setText("\n".join(
+            f"{name} x{quantity}" for name, quantity in inventory.items()
         ))
 
     @property

@@ -51,11 +51,18 @@ Her contributions to Randovania were invaluable and she'll be missed.
 
 -   Added: Relative hints, where an item is described as being some rooms away from another item or room.
 
+-   Added: Guaranteed hints which tells in which areas (Agon Wastes, Ing Hive, etc) contains the keys for each of your dark temples.
+    These hints are placed purely randomly, similarly to the guaranteed Temple Bosses hints.
+
+-   Added: Free hint spots after generation now prefer items from late in progression instead of pure random.
+
 -   Removed: Hints with green item names/joke item names have been removed.
+
+-   Removed: Temple Keys are no longer hinted by progression-based Luminoth lore hints.
 
 -   Changed: All games now have precisely 2 joke hints, which no longer randomly replace a progression hint.
 
--   Changed: Hints from keybearer corpses now uses a broader category, which leaves unclear if it's an expansion or not. 
+-   Changed: Hints from keybearer corpses now uses a broader category, which leaves unclear if it's an expansion or not.
 
 ### GUI
 
@@ -91,7 +98,7 @@ Her contributions to Randovania were invaluable and she'll be missed.
 
 -   Added: The rate of healing for Safe Zones is now configurable.
 
--   Fixed: Removed Aerie, Aerie Access and Credits from possible starting locations.
+-   Fixed: Removed Aerie Access and Credits from possible starting locations.
 
 -   Changed: The Mission Final screen now includes the seed hash instead of Permalink, as many permalinks are bigger than the screen.
 
@@ -125,6 +132,8 @@ Her contributions to Randovania were invaluable and she'll be missed.
     - Methods to open all Seeker Missile Doors with Screw Attack (Expert and above).
     - Method to activate most Bomb Slots without Bombs (Advanced and above).
     - Dark/Light/Annihilator doors and Dark/Light portals require either ammo or Charge Beam.
+
+-   Sanctum, method to fight Emperor Ing without Spider Ball (Hypermode).
 
 -   Abandoned Base, method of reaching portal with Space Jump and Screw Attack (Intermediate and above).
 
@@ -204,7 +213,9 @@ Her contributions to Randovania were invaluable and she'll be missed.
 
 -   Grand Abyss, methods of crossing the gap with Boost Jump (Advanced and above) or Extended Dash (Expert and above).
 
--   Hall of Combat Mastery, method of collecting the item with a Wall Boost (Expert and above).
+-   Hall of Combat Mastery:
+    - Method of collecting the item with a Wall Boost (Expert and above).
+    - Methods of reaching the item, and skipping the Spider Track to and from Central Area Transport East with Screw Attack (Intermediate and above).
 
 -   Hive Dynamo Works, method of collecting the Flying Ing Cache item and leaving with Space Jump and Scan Visor (Advanced and above).
 
@@ -235,10 +246,7 @@ Her contributions to Randovania were invaluable and she'll be missed.
     - Trooper Security Station Event coming from Communication Area
     - Various Dash Requirements
 
--   Dark Aether Damage Requirements:
-    - Sky Temple Grounds
-    - Dark Agon Wastes
-    - Dark Torvus Bog
+-   Dark Aether Damage Requirements have been added to every room in the Dark World
 
 -   Invisible Objects and Dark Visor Requirements:
     - Screw Attack without Space Jump in Unseen Way (Intermediate and above)
@@ -258,27 +266,19 @@ Her contributions to Randovania were invaluable and she'll be missed.
 
 -   Simplified nodes in many rooms for ease of logic navigation.
 
--   Crossing lower Double Path without Space Jump is now Beginner difficulty (from Intermediate).
+-   Crossing lower Double Path without Space Jump is now Beginner (from Intermediate).
 
--   Reaching Transit Station door in Mining Station B after unlocking the portal with Space Jump and Screw Attack is now Advanced difficulty (from Expert).
+-   Reaching Transit Station door in Mining Station B after unlocking the portal with Space Jump and Screw Attack is now Advanced (from Expert).
 
--   Reaching the portal in Catacombs with Morph Ball and Reverse Air Underwater is now Advanced difficulty (from Expert).
+-   Reaching the portal in Catacombs with Morph Ball and Reverse Air Underwater is now Advanced (from Expert).
 
--   Reaching Transit Tunnel South/West Doors from top door in Gathering Hall with Morph Ball and Roll Jump is now Expert difficulty (from Advanced).
+-   Reaching Transit Tunnel South/West Doors from top door in Gathering Hall with Morph Ball and Roll Jump is now Expert (from Advanced).
 
 -   Reaching Portal Chamber door in Poisoned Bog with just Screw Attack is now Advanced (from Intermediate).
 
 -   Scan Dash to upper level in Central Mining Station from Central Station Access is now Expert (from Advanced).
 
--   Added: Path of Roots missile using only Morph, Bombs and Space Jump for Beginner.
-
--   Fixed: Added Dark Aether Damage requirements for Battleground.
-
--   Fixed: Added Dark Aether Damage requirements for Undertemple on Intermediate.
-
--   Added: Method to make PB Guardian break PB door using bombs
-
--   Added: Undertemple Access item using Screw Attack and Jump Off Enemy (Hypermode).
+-   Instant Morph tricks in Hall of Combat Mastery to the item and Central Area Transport East and back are now Advanced (from Intermediate).
 
 ## [1.2.2] - 2020-06-06
 
