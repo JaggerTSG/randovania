@@ -208,7 +208,7 @@ Asset id: 2679590972
           Morph Ball
           Any of the following:
               Morph Ball Bomb
-              Boost Ball and Wall Boost (Expert)
+              Boost Ball and Wall Boost (Advanced)
 
 > Door to Path of Honor; Heals? False
   * Normal Door to Path of Honor/Door to Service Access
@@ -232,7 +232,7 @@ Asset id: 2679590972
                   Any of the following:
                       Morph Ball Bomb or Wall Boost (Expert)
                       Wall Boost (Advanced) and Screw Attack into Tunnels (Advanced) and Use Screw Attack (Space Jump)
-              Morph Ball Bomb and Movement (Intermediate)
+              Morph Ball Bomb and Movement (Advanced)
   > Door to Meeting Grounds
       All of the following:
           Morph Ball
@@ -249,9 +249,9 @@ Asset id: 2679590972
               Morph Ball Bomb
               Boost Ball and Wall Boost (Expert)
   > Morph Ball Door to Meeting Grounds
-      Any of the following:
-          Movement (Intermediate)
-          Morph Ball and Boost Ball
+      All of the following:
+          Morph Ball
+          Boost Ball or Movement (Advanced)
   > Door to Meeting Grounds
       All of the following:
           Morph Ball
@@ -1028,7 +1028,7 @@ Asset id: 1263425809
           Any of the following:
               Space Jump Boots or Slope Jump (Advanced)
               Morph Ball Bomb and Bomb Jump (Beginner)
-              Movement (Intermediate) and Use Screw Attack (No Space Jump)
+              Movement (Beginner) and Use Screw Attack (No Space Jump)
   > Event - Temple Assembly Site Light Block
       Shoot Light Beam
   > Translator Gate
@@ -1131,7 +1131,7 @@ Asset id: 2909835645
               Scan Visor and Space Jump Boots and After Ing Windchamber Puzzle and Combat/Scan Dash (Advanced)
               Morph Ball Bomb and Bomb Space Jump (Advanced) and Standable Terrain (Advanced) and Use Screw Attack (Space Jump)
               Grapple Beam and After Ing Windchamber Puzzle
-              Space Jump Boots and After Ing Windchamber Puzzle and Terminal Fall Abuse (Intermediate) and Normal Damage ≥ 10
+              Space Jump Boots and After Ing Windchamber Puzzle and Terminal Fall Abuse (Beginner) and Normal Damage ≥ 10
 
 > Pickup (Sunburst); Heals? False
   * Pickup 7; Major Location? True
@@ -1357,7 +1357,7 @@ Asset id: 1667141025
       Trivial
   > Next to Pickup
       Any of the following:
-          Space Jump Boots or Standable Terrain (Intermediate)
+          Space Jump Boots or Standable Terrain (Beginner)
           Morph Ball and Morph Ball Bomb and Bomb Jump (Beginner)
 
 > Door to Storage Cavern A; Heals? False
@@ -1382,10 +1382,10 @@ Asset id: 1667141025
       Any of the following:
           Space Jump Boots
           All of the following:
-              Standable Terrain (Intermediate)
+              Standable Terrain (Beginner)
               Any of the following:
-                  Morph Ball and Morph Ball Bomb and Bomb Jump (Advanced)
-                  Movement (Intermediate) and Use Screw Attack (No Space Jump)
+                  Morph Ball and Morph Ball Bomb and Bomb Jump (Beginner)
+                  Movement (Beginner) and Use Screw Attack (No Space Jump)
   > Pickup (Missile)
       All of the following:
           Morph Ball
