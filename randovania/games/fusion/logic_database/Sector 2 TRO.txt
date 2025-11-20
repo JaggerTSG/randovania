@@ -28,6 +28,10 @@ Extra - minimap_coordinates: [{'x': 6, 'y': 2}, {'x': 6, 'y': 3}, {'x': 6, 'y': 
       Trivial
   > Other to Dessgeega Dorm
       Can Use Any Bombs
+  > Frozen Enemy OoB
+      All of the following:
+          Morph Ball and Clipping (Beginner) and Can Freeze Enemies With Any Weapon
+          Charge Beam or Can Use Any Bombs
 
 > Other to Kihunter Hallway; Heals? False
   * Layers: default
@@ -63,6 +67,17 @@ Extra - minimap_coordinates: [{'x': 6, 'y': 2}, {'x': 6, 'y': 3}, {'x': 6, 'y': 
   * Extra - door_idx: (32,)
   > Door to Courtyard Access
       Can Use Any Bombs
+
+> Frozen Enemy OoB; Heals? False
+  * Layers: default
+  > Other to Kihunter Hallway
+      Clipping (Advanced) and Can Use Springball
+  > Dock to Lobby Cache
+      Clipping (Advanced) and Can Use Springball
+
+> Dock to Lobby Cache; Heals? False
+  * Layers: default
+  * Open Hatch to Lobby Cache/Door to Entrance Lobby; Excluded from Dock Lock Rando
 
 ----------------
 Entrance Save Room
@@ -212,7 +227,15 @@ Extra - minimap_coordinates: [{'x': 8, 'y': 3}, {'x': 9, 'y': 3}]
   * Extra - blocky: 8
   * Extra - infant_weight: 0.28
   > Door to Entrance Lobby
-      Can Use Any Bombs
+      Any of the following:
+          Can Use Any Bombs
+          All of the following:
+              Charge Beam and Can Freeze Enemies With Any Weapon
+              Any of the following:
+                  Clipping (Intermediate)
+                  Morph Ball and Clipping (Beginner)
+  > Dock to Entrance Lobby
+      Charge Beam and Clipping (Advanced) and Can Freeze Enemies With Any Weapon and Can Use Springball
 
 > Door to Entrance Lobby; Heals? False
   * Layers: default
@@ -230,6 +253,15 @@ Extra - minimap_coordinates: [{'x': 8, 'y': 3}, {'x': 9, 'y': 3}]
                   Stand On Frozen Enemies (Beginner) and Can Freeze Enemies With Any Weapon
                   # Destroy first Bomb Block with Screw
                   Screw Attack and Knowledge (Beginner)
+          All of the following:
+              Charge Beam and Can Freeze Enemies With Any Weapon
+              Any of the following:
+                  Clipping (Intermediate)
+                  Morph Ball and Clipping (Beginner)
+
+> Dock to Entrance Lobby; Heals? False
+  * Layers: default
+  * Open Hatch to Entrance Lobby/Door to Lobby Cache; Excluded from Dock Lock Rando
 
 ----------------
 Data Room

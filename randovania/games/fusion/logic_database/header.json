@@ -761,6 +761,12 @@
                 "description": "The player may be expected to take intentional damage from an enemy to traverse a room or complete an action.",
                 "require_documentation_above": 0,
                 "extra": {}
+            },
+            "Clipping": {
+                "long_name": "Clipping",
+                "description": "The player may be expected to get repositioned across solid collision using either reforming blocks or frozen enemies.",
+                "require_documentation_above": 0,
+                "extra": {}
             }
         },
         "damage": {
@@ -3030,6 +3036,12 @@
             3,
             4,
             5
+        ],
+        "Clipping": [
+            1,
+            2,
+            3,
+            4
         ],
         "UnderwaterWallJump": [
             1,

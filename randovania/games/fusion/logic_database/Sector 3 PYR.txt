@@ -53,6 +53,8 @@ Extra - minimap_coordinates: [{'x': 8, 'y': 2}, {'x': 8, 'y': 3}, {'x': 8, 'y': 
   * Extra - door_idx: (53,)
   > Door to Entrance Recharge Room
       Trivial
+  > Other to Alcove
+      Clipping (Intermediate) and Can Freeze Enemies With Any Weapon and Can Use Springball
 
 ----------------
 Entrance Save Room
@@ -133,6 +135,8 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 5}, {'x': 4, 'y': 6}, {'x': 5, 'y': 
   * Layers: default
   * Open Hatch to Entrance Lobby/Door to Security Access
   * Extra - door_idx: (8,)
+  > Other to Level 2 Security Room
+      Speed Booster and Clipping (Advanced) and Can Use Springball
   > Behind Wall
       # Is safe in DLR
       Speed Booster and Disabled Entrance Rando
@@ -262,11 +266,15 @@ Hint Features - Geron
   * Extra - blocky: 17
   * Extra - infant_weight: 0.3
   > Door to B.O.X. Arena Access
-      Can Bounce in Ball and Can Use Any Bombs
+      All of the following:
+          Can Bounce in Ball
+          Wave Beam or Can Use Any Bombs
   > Door to Red Tower
       Can Use Any Bombs
   > Other to Namihe's Lair
       Morph Ball and Can Break Single Bomb Blocks
+  > Dock to B.O.X. Arena Access
+      Clipping (Advanced) and Can Use Springball
 
 > Door to Checkpoint Crossing; Heals? False
   * Layers: default
@@ -307,6 +315,10 @@ Hint Features - Geron
   * Layers: default
   * Tunnel to Namihe's Lair/Other to Bob's Abode
   * Extra - door_idx: (60, 63)
+
+> Dock to B.O.X. Arena Access; Heals? False
+  * Layers: default
+  * Open Hatch to B.O.X. Arena Access/Door to Bob's Abode; Excluded from Dock Lock Rando
 
 ----------------
 Alcove
@@ -373,7 +385,9 @@ Hint Features - Multiple Pickups, Pillar
 > Above E-Tank; Heals? False
   * Layers: default
   > Pickup (Power Bomb Tank)
-      Can Use Power Bombs
+      Any of the following:
+          Can Use Power Bombs
+          Clipping (Intermediate) and Can Break Single Bomb Blocks and Can Use Springball
   > Pickup (Hidden Energy Tank)
       Can Break Single Bomb Blocks
 

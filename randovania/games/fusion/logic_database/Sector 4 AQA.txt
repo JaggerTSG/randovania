@@ -594,7 +594,9 @@ Hint Features - Multiple Pickups
   * Extra - blocky: 9
   * Extra - infant_weight: 0.34
   > Beside Upper Pickup
-      Trivial
+      Can Use Any Bombs
+  > Beside Lower Pickup
+      Charge Beam and Clipping (Expert) and Can Freeze Enemies With Any Weapon and Can Use Springball
 
 > Pickup (Lower Missile Tank); Heals? False
   * Layers: default
@@ -625,8 +627,17 @@ Hint Features - Multiple Pickups
   * Layers: default
   * L0 Hatch to Reservoir Save Room/Door to Reservoir Vault
   * Extra - door_idx: (117,)
+  > Other to Serris Speedway
+      Charge Beam and Speed Booster and Clipping (Beginner) and Shinespark Tricks (Beginner) and Can Freeze Enemies With Any Weapon and Can Use Springball
   > Other to Reservoir East
       Trivial
+  > Beside Lower Pickup
+      All of the following:
+          Morph Ball and Can Freeze Enemies With Any Weapon
+          Charge Beam or Can Use Any Bombs
+          Any of the following:
+              Clipping (Intermediate)
+              Clipping (Beginner) and Can Use Springball
   > Next to Chain Blocks
       Any of the following:
           # Wall Jump: https://youtu.be/c2ojj7S_-5c
@@ -649,6 +660,8 @@ Hint Features - Multiple Pickups
 
 > Beside Lower Pickup; Heals? False
   * Layers: default
+  > Pickup (Upper Missile Tank)
+      Charge Beam and Clipping (Expert) and Can Freeze Enemies With Any Weapon and Can Use Springball
   > Pickup (Lower Missile Tank)
       Trivial
   > Door to Reservoir Save Room
@@ -952,6 +965,13 @@ Extra - minimap_coordinates: [{'x': 14, 'y': 7}, {'x': 14, 'y': 8}, {'x': 14, 'y
   * Layers: default
   * L0 Hatch to Aquarium Save Room East/Door to Aquarium Hub
   * Extra - door_idx: (116,)
+  > Door to Aquarium Speedway
+      All of the following:
+          Gravity Suit and Can Freeze Enemies With Any Weapon and Can Use Springball
+          Any of the following:
+              Charge Beam and Clipping (Intermediate)
+              Power Bombs ≥ 2 and Clipping (Expert) and Can Use Power Bombs
+          Hi-Jump or Space Jump
   > Room Center
       Trivial
 
@@ -1103,6 +1123,17 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 2}, {'x': 4, 'y': 3}, {'x': 4, 'y': 
       Morph Ball
   > Door to Pump Control Unit
       Trivial
+  > Dock to Pump Control Unit
+      All of the following:
+          Can Freeze Enemies With Any Weapon
+          Any of the following:
+              Clipping (Intermediate)
+              Morph Ball and Clipping (Beginner)
+          Charge Beam or Can Use Any Bombs
+  > Dock to Cargo Hold to Sector 5 (ARC)
+      All of the following:
+          Clipping (Advanced) and Can Freeze Enemies With Any Weapon and Can Use Springball
+          Charge Beam or Can Use Any Bombs
 
 > Door to Cargo Hold to Sector 5 (ARC); Heals? False
   * Layers: default
@@ -1131,6 +1162,14 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 2}, {'x': 4, 'y': 3}, {'x': 4, 'y': 
   * Extra - door_idx: (75,)
   > Door to Reservoir West
       Trivial
+
+> Dock to Pump Control Unit; Heals? False
+  * Layers: default
+  * Open Hatch to Pump Control Unit/Door to Pump Control Access; Excluded from Dock Lock Rando
+
+> Dock to Cargo Hold to Sector 5 (ARC); Heals? False
+  * Layers: default
+  * Open Hatch to Cargo Hold to Sector 5 (ARC)/Door to Pump Control Access; Excluded from Dock Lock Rando
 
 ----------------
 Pump Control Save Room
