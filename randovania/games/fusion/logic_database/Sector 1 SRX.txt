@@ -1811,22 +1811,28 @@ Hint Features - Climbable Surface
   * Open Passage to Charge Core Lower Access/Other to Watering Hole
   * Extra - door_idx: (101,)
   > Pickup (Hidden Power Bomb Tank)
-      All of the following:
-          Level 0 Keycard and Morph Ball and Speed Booster and After Sector 1 Charge Core Arena Access Bomb Blocks Destroyed and Disabled Door Lock Rando and Disabled Entrance Rando and Can Bounce in Ball
-          Any of the following:
-              # Deal with water
-              Gravity Suit
-              # Very tight without Gravity: https://youtu.be/7CrmoeqlIUk
-              Charge Beam and Shinespark Tricks (Ludicrous)
-          Any of the following:
-              # A way to pass by the Sciser
-              Charge Beam or Missiles or Plasma Beam
-              All of the following:
-                  Wide Beam
-                  Ice Beam or Wave Beam
-              Gravity Suit and Screw Attack
-              # Keep storing spark, until you can shoot the Scizer: https://youtu.be/QnQD7K9hcB8
-              Shinespark Tricks (Advanced)
+      Any of the following:
+          All of the following:
+              Level 0 Keycard and Morph Ball and Speed Booster and After Sector 1 Charge Core Arena Access Bomb Blocks Destroyed and Disabled Door Lock Rando and Disabled Entrance Rando and Can Bounce in Ball
+              Any of the following:
+                  # Deal with water
+                  Gravity Suit
+                  # Very tight without Gravity: https://youtu.be/7CrmoeqlIUk
+                  Charge Beam and Shinespark Tricks (Ludicrous)
+              Any of the following:
+                  # A way to pass by the Sciser
+                  Charge Beam or Missiles or Plasma Beam
+                  All of the following:
+                      Wide Beam
+                      Ice Beam or Wave Beam
+                  Gravity Suit and Screw Attack
+                  # Keep storing spark, until you can shoot the Scizer: https://youtu.be/QnQD7K9hcB8
+                  Shinespark Tricks (Advanced)
+          All of the following:
+              Can Use Springball
+              Any of the following:
+                  Clipping (Ludicrous) and Can Freeze Enemies With Any Weapon
+                  Clipping (Expert) and Can Freeze Enemies With Ice Beam
 
 ----------------
 Glass Tube to Sector 2 (TRO)

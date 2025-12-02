@@ -72,6 +72,8 @@ Extra - minimap_coordinates: [{'x': 6, 'y': 2}, {'x': 6, 'y': 3}, {'x': 6, 'y': 
   * Layers: default
   > Other to Kihunter Hallway
       Clipping (Advanced) and Can Use Springball
+  > Other to Dessgeega Dorm
+      Clipping (Expert) and Can Use Springball
   > Dock to Lobby Cache
       Clipping (Advanced) and Can Use Springball
 
@@ -1251,7 +1253,17 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 2, 'y': 5}, {'x': 2, 'y': 
   * L0 Hatch to Courtyard Access/Door to Data Courtyard
   * Extra - door_idx: (16,)
   > Pickup (Missile Tank)
-      Can Use Any Bombs
+      Any of the following:
+          Can Use Any Bombs
+          All of the following:
+              Can Freeze Enemies With Any Weapon and Can Use Springball
+              Any of the following:
+                  Clipping (Expert)
+                  All of the following:
+                      Space Jump and Clipping (Advanced) and Damage Boosts (Advanced)
+                      Any of the following:
+                          Normal Damage ≥ 44
+                          Gravity Suit and Varia Suit and Normal Damage ≥ 4
   > Door to Data Room
       Trivial
   > Door to Courtyard Save Room
@@ -1261,6 +1273,16 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 2, 'y': 5}, {'x': 2, 'y': 
           Can Break Single Bomb Blocks
           # Short jump onto bomb block to break it: https://youtu.be/JaTjNuOdVlY
           Level 0 Keycard and Speed Booster and Knowledge (Intermediate) and Movement (Advanced) and Disabled Door Lock Rando and Disabled Entrance Rando
+  > Dock to Data Room
+      All of the following:
+          Can Freeze Enemies With Any Weapon and Can Use Springball
+          Any of the following:
+              Clipping (Expert)
+              All of the following:
+                  Space Jump and Clipping (Advanced) and Damage Boosts (Advanced)
+                  Any of the following:
+                      Normal Damage ≥ 44
+                      Gravity Suit and Varia Suit and Normal Damage ≥ 4
 
 > Event - Bomb Block; Heals? False
   * Layers: default
@@ -1269,6 +1291,10 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 2, 'y': 5}, {'x': 2, 'y': 
       Morph Ball
   > Door to Courtyard Access
       Trivial
+
+> Dock to Data Room; Heals? False
+  * Layers: default
+  * Open Hatch to Data Room/Door to Data Courtyard; Excluded from Dock Lock Rando
 
 ----------------
 Overgrown Spire
