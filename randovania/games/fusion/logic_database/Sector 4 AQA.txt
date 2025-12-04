@@ -280,18 +280,22 @@ Hint Features - Climbable Surface
   * L0 Hatch to Sciser Stall/Door to Reservoir East
   * Extra - door_idx: (13,)
   > Pickup (Hidden Power Bomb Tank)
-      All of the following:
-          Any of the following:
-              # Deal with water
-              After Sector 4 Water Level Lowered
-              # One Suit Damage Run: https://youtu.be/S05k8Y1aJTo
-              Damage Runs (Beginner) and Electrified Water Damage ≥ 20 and Have Any Suit Upgrade
-              # Suitless Damage Run: https://youtu.be/wKpeR_ap-E4
-              Damage Runs (Intermediate) and Electrified Water Damage ≥ 65
+      Any of the following:
           All of the following:
-              # Get through blocks
-              Can Use Power Bombs
-              Power Bombs ≥ 2 or Can Use Bombs
+              Any of the following:
+                  # Deal with water
+                  After Sector 4 Water Level Lowered
+                  # One Suit Damage Run: https://youtu.be/S05k8Y1aJTo
+                  Damage Runs (Beginner) and Electrified Water Damage ≥ 20 and Have Any Suit Upgrade
+                  # Suitless Damage Run: https://youtu.be/wKpeR_ap-E4
+                  Damage Runs (Intermediate) and Electrified Water Damage ≥ 65
+              All of the following:
+                  # Get through blocks
+                  Can Use Power Bombs
+                  Power Bombs ≥ 2 or Can Use Bombs
+          Charge Beam and Clipping (Ludicrous) and Can Freeze Enemies With Any Weapon and Can Use Springball
+  > Other to Waterway
+      Charge Beam and Clipping (Expert) and Can Freeze Enemies With Any Weapon and Can Use Springball
   > Room Center
       Can Use Any Bombs
 

@@ -264,7 +264,7 @@ Extra - minimap_coordinates: [{'x': 10, 'y': 2}, {'x': 10, 'y': 3}, {'x': 10, 'y
       Trivial
   > Door to Pillar Highway
       All of the following:
-          Level 0 Keycard and Screw Attack and Speed Booster and Disabled Door Lock Rando and Disabled Entrance Rando
+          Level 0 Keycard and Speed Booster and Disabled Door Lock Rando and Disabled Entrance Rando
           Any of the following:
               # Ice X logic
               Varia Suit
@@ -274,6 +274,9 @@ Extra - minimap_coordinates: [{'x': 10, 'y': 2}, {'x': 10, 'y': 3}, {'x': 10, 'y
               Plasma Beam and Damage Boosts (Advanced) and Cold Damage ≥ 207
               # Plasma and Wide can stun all the X and avoid all the damage: https://youtu.be/NWXuyjskVKk
               Morph Ball and Plasma Beam and Wide Beam and Combat (Advanced)
+          Any of the following:
+              Screw Attack
+              Charge Beam and Level 4 Keycard and Missiles and Clipping (Beginner) and Shinespark Tricks (Expert) and Can Use Power Bombs
 
 > Door to Nocturnal Playground; Heals? False
   * Layers: default
@@ -382,6 +385,19 @@ Extra - minimap_coordinates: [{'x': 7, 'y': 4}, {'x': 8, 'y': 4}, {'x': 9, 'y': 
               Power Bombs ≥ 4 and Combat (Advanced) and Knowledge (Advanced)
               # Plasma and Wide can freeze all X and avoid all the damage: https://youtu.be/cIdt2h_VvhQ
               Plasma Beam and Wide Beam and Combat (Advanced)
+  > Dock to X-B.O.X. Arena Access
+      All of the following:
+          Charge Beam and Can Freeze Enemies With Any Weapon and Can Use Springball
+          Any of the following:
+              Varia Suit
+              Damage Boosts (Intermediate) and Normal Damage ≥ 414
+          Any of the following:
+              Clipping (Ludicrous)
+              After Boss Varia Core-X Defeated and Clipping (Expert)
+
+> Dock to X-B.O.X. Arena Access; Heals? False
+  * Layers: default
+  * Open Hatch to X-B.O.X. Arena Access/Door to Forbidden Entrance; Excluded from Dock Lock Rando
 
 ----------------
 Nocturnal Playground
@@ -676,6 +692,10 @@ Extra - minimap_coordinates: [{'x': 5, 'y': 4}, {'x': 5, 'y': 5}, {'x': 6, 'y': 
           Stand On Frozen Enemies (Advanced) and Can Freeze Enemies With Any Weapon
           # Shinespark from X-B.O.X. Arena: https://youtu.be/BHmNhsne3hw
           Level 0 Keycard and Screw Attack and Speed Booster and After Boss X-B.O.X. Defeated and Shinespark Tricks (Beginner) and Disabled Door Lock Rando and Disabled Entrance Rando
+  > Dock to Forbidden Entrance
+      All of the following:
+          Clipping (Advanced) and Can Freeze Enemies With Any Weapon and Can Use Springball
+          Charge Beam or Can Use Any Bombs
 
 > Door to Spaceboost Alley; Heals? False
   * Layers: default
@@ -686,6 +706,10 @@ Extra - minimap_coordinates: [{'x': 5, 'y': 4}, {'x': 5, 'y': 5}, {'x': 6, 'y': 
           Morph Ball
           # Shinespark from Spaceboost Alley: https://youtu.be/r71Z7nR9eRY
           Speed Booster and Shinespark Tricks (Beginner) and Disabled Door Lock Rando and Disabled Entrance Rando
+
+> Dock to Forbidden Entrance; Heals? False
+  * Layers: default
+  * Open Hatch to Forbidden Entrance/Door to X-B.O.X. Arena Access; Excluded from Dock Lock Rando
 
 ----------------
 Zozoro Wine Cellar
@@ -893,7 +917,9 @@ Hint Features - Multiple Pickups, 1-way Shutter
   > Pickup (Missile Tank)
       Wave Beam
   > Door to X-B.O.X. Arena (Upper)
-      Screw Attack and Have Any Jump Upgrade
+      All of the following:
+          Screw Attack
+          Wall Jump (Intermediate) or Have Any Jump Upgrade
 
 > Door to X-B.O.X. Arena (Upper); Heals? False
   * Layers: default
@@ -916,6 +942,12 @@ Hint Features - Multiple Pickups, 1-way Shutter
               Movement (Expert)
               # Spam bombs to hover across: https://youtu.be/4y7ohyL0zkE&t=37
               Movement (Advanced) and Can Use Bombs
+  > Pickup (Missile Tank)
+      Any of the following:
+          All of the following:
+              Screw Attack and Clipping (Beginner) and Can Freeze Enemies With Any Weapon
+              Charge Beam or Can Use Any Bombs
+          Clipping (Advanced) and Can Use Any Bombs and Can Use Springball
   > Door to X-B.O.X. Arena (Lower)
       Screw Attack
 

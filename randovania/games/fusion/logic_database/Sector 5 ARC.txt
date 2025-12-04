@@ -9,6 +9,14 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 2}, {'x': 4, 'y': 3}, {'x': 4, 'y': 
   * Extra - door_idx: (1,)
   > Door to Magic Box
       Trivial
+  > Dock to Magic Box
+      All of the following:
+          Can Freeze Enemies With Any Weapon
+          Any of the following:
+              Clipping (Intermediate)
+              Morph Ball and Clipping (Beginner)
+  > Dock to Gerubus Gully
+      Clipping (Intermediate) and Can Freeze Enemies With Any Weapon
 
 > Door to Magic Box; Heals? False
   * Layers: default
@@ -17,7 +25,15 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 2}, {'x': 4, 'y': 3}, {'x': 4, 'y': 
   > Door to Entrance Recharge Room
       Trivial
   > Door to Training Grounds
-      Missiles and Morph Ball
+      All of the following:
+          Morph Ball
+          Any of the following:
+              Missiles
+              All of the following:
+                  Charge Beam and Hi-Jump and Can Freeze Enemies With Ice Beam
+                  Any of the following:
+                      Clipping (Intermediate)
+                      Clipping (Beginner) and Can Use Springball
   > Door to Gerubus Gully
       Trivial
 
@@ -34,6 +50,14 @@ Extra - minimap_coordinates: [{'x': 4, 'y': 2}, {'x': 4, 'y': 3}, {'x': 4, 'y': 
   * Extra - door_idx: (81,)
   > Door to Magic Box
       Trivial
+
+> Dock to Magic Box; Heals? False
+  * Layers: default
+  * Open Hatch to Magic Box/Door to Entrance Lobby; Excluded from Dock Lock Rando
+
+> Dock to Gerubus Gully; Heals? False
+  * Layers: default
+  * Open Hatch to Gerubus Gully/Door to Entrance Lobby; Excluded from Dock Lock Rando
 
 ----------------
 Entrance Save Room
@@ -208,8 +232,17 @@ Extra - minimap_coordinates: [{'x': 9, 'y': 4}, {'x': 9, 'y': 5}, {'x': 9, 'y': 
           # Damage Reqs
           Damage Runs (Advanced) and Cold Damage ≥ 200
   > Door to Arctic Underside
-      # Charge in previous room
-      Level 0 Keycard and Speed Booster and Varia Suit and Disabled Door Lock Rando and Disabled Entrance Rando
+      Any of the following:
+          # Charge in previous room
+          All of the following:
+              Varia Suit
+              Any of the following:
+                  Level 0 Keycard and Speed Booster and Disabled Door Lock Rando and Disabled Entrance Rando
+                  All of the following:
+                      Morph Ball and Can Freeze Enemies With Any Weapon
+                      Any of the following:
+                          Clipping (Intermediate)
+                          Clipping (Beginner) and Can Use Any Bombs and Can Use Springball
 
 > Door to Waver Ward; Heals? False
   * Layers: default
@@ -291,6 +324,8 @@ Extra - minimap_coordinates: [{'x': 9, 'y': 4}, {'x': 9, 'y': 5}, {'x': 9, 'y': 
               Varia Suit
               # Damage Reqs
               Damage Runs (Advanced) and Cold Damage ≥ 180
+  > Door to Ripper Road
+      Varia Suit and Clipping (Advanced) and Can Freeze Enemies With Any Weapon and Can Use Springball
 
 > Door to Crow's Nest; Heals? False
   * Layers: default
@@ -306,6 +341,16 @@ Extra - minimap_coordinates: [{'x': 9, 'y': 4}, {'x': 9, 'y': 5}, {'x': 9, 'y': 
           Varia Suit
           # Damage Reqs
           Damage Runs (Intermediate) and Cold Damage ≥ 50
+  > Dock to Crow's Nest
+      All of the following:
+          Varia Suit and Can Freeze Enemies With Any Weapon
+          Any of the following:
+              Clipping (Intermediate)
+              Morph Ball and Clipping (Beginner)
+
+> Dock to Crow's Nest; Heals? False
+  * Layers: default
+  * Open Hatch to Crow's Nest/Door to Arctic Containment; Excluded from Dock Lock Rando
 
 ----------------
 Zeela Checkpoint
@@ -1140,6 +1185,12 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 3, 'y': 4}]
   * Extra - infant_weight: 0.34
   > Door to Entrance Lobby
       Trivial
+  > Dock to Entrance Lobby
+      All of the following:
+          Can Freeze Enemies With Any Weapon and Can Use Springball
+          Any of the following:
+              Charge Beam and Clipping (Advanced)
+              Clipping (Expert) and Can Use Any Bombs
 
 > Door to Entrance Lobby; Heals? False
   * Layers: default
@@ -1148,7 +1199,13 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 3, 'y': 4}]
   > Pickup (Missile Tank)
       Trivial
   > Door to Glass Tube to Sector 6 (NOC)
-      Screw Attack
+      Any of the following:
+          Screw Attack
+          All of the following:
+              Can Freeze Enemies With Any Weapon
+              Any of the following:
+                  Charge Beam and Clipping (Beginner)
+                  Clipping (Intermediate) and Can Use Any Bombs
 
 > Door to Glass Tube to Sector 6 (NOC); Heals? False
   * Layers: default
@@ -1156,6 +1213,10 @@ Extra - minimap_coordinates: [{'x': 2, 'y': 4}, {'x': 3, 'y': 4}]
   * Extra - door_idx: (73,)
   > Door to Entrance Lobby
       Screw Attack
+
+> Dock to Entrance Lobby; Heals? False
+  * Layers: default
+  * Open Hatch to Entrance Lobby/Door to Magic Box; Excluded from Dock Lock Rando
 
 ----------------
 Glass Tube to Sector 6 (NOC)
@@ -1275,8 +1336,12 @@ Extra - minimap_coordinates: [{'x': 22, 'y': 4}]
   > Other to Nightmare Arena
       Trivial
   > Door to Nightmare Upper Access
-      # 2 Frame perfect spring ball jumps: https://youtu.be/USLTZNxatAw
-      Movement (Ludicrous) and Can Use Springball
+      All of the following:
+          Can Use Springball
+          Any of the following:
+              # 2 Frame perfect spring ball jumps: https://youtu.be/USLTZNxatAw
+              Movement (Ludicrous)
+              Clipping (Intermediate) and Can Use Any Bombs
 
 > Other to Nightmare Arena; Heals? False
   * Layers: default
