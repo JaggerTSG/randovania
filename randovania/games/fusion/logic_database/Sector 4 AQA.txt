@@ -296,6 +296,12 @@ Hint Features - Climbable Surface
           Charge Beam and Clipping (Ludicrous) and Can Freeze Enemies With Any Weapon and Can Use Springball
   > Other to Waterway
       Charge Beam and Clipping (Expert) and Can Freeze Enemies With Any Weapon and Can Use Springball
+  > Other to Reservoir Vault
+      All of the following:
+          Charge Beam and Can Use Springball
+          Any of the following:
+              Clipping (Intermediate) and Can Freeze Enemies With Ice Beam
+              Clipping (Advanced) and Can Freeze Enemies With Any Weapon
   > Room Center
       Can Use Any Bombs
 
@@ -359,6 +365,11 @@ Hint Features - Climbable Surface
                   Can Use Power Bombs
                   # Destroy via mid air morph: https://youtu.be/3taYvq79AmA
                   Mid-Air Morph (Beginner) and Can Use Bombs
+                  All of the following:
+                      Charge Beam and Clipping (Advanced)
+                      Any of the following:
+                          Can Freeze Enemies With Ice Beam
+                          Normal Damage ≥ 42 and Can Freeze Enemies With Any Weapon
           All of the following:
               # Speedboost through blocks
               Speed Booster

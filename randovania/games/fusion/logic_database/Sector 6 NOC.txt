@@ -21,12 +21,16 @@ Extra - minimap_coordinates: [{'x': 3, 'y': 3}, {'x': 4, 'y': 2}, {'x': 4, 'y': 
   > Door to Geron's Crossing
       Trivial
   > Door to Glass Tube to Sector 4 (AQA)
-      All of the following:
-          Screw Attack
-          Any of the following:
-              Can Break Single Bomb Blocks
-              # Currently logically useless: but maybe if we have an option to remove screw blocks https://youtu.be/Ifde8nknvYk
-              Level 0 Keycard and Speed Booster and Knowledge (Intermediate) and Shinespark Tricks (Advanced) and Disabled Door Lock Rando and Disabled Entrance Rando
+      Any of the following:
+          All of the following:
+              Screw Attack
+              Any of the following:
+                  Can Break Single Bomb Blocks
+                  # Currently logically useless: but maybe if we have an option to remove screw blocks https://youtu.be/Ifde8nknvYk
+                  Level 0 Keycard and Speed Booster and Knowledge (Intermediate) and Shinespark Tricks (Advanced) and Disabled Door Lock Rando and Disabled Entrance Rando
+          All of the following:
+              Clipping (Expert) and Can Freeze Enemies With Any Weapon and Can Use Springball
+              Charge Beam or Can Use Any Bombs
 
 > Door to Geron's Crossing; Heals? False
   * Layers: default
@@ -276,7 +280,12 @@ Extra - minimap_coordinates: [{'x': 10, 'y': 2}, {'x': 10, 'y': 3}, {'x': 10, 'y
               Morph Ball and Plasma Beam and Wide Beam and Combat (Advanced)
           Any of the following:
               Screw Attack
-              Charge Beam and Level 4 Keycard and Missiles and Clipping (Beginner) and Shinespark Tricks (Expert) and Can Use Power Bombs
+              All of the following:
+                  Charge Beam and Level 4 Keycard and Missiles and Space Jump and Clipping (Beginner) and Shinespark Tricks (Ludicrous) and Can Use Power Bombs
+                  Any of the following:
+                      Normal Damage ≥ 60
+                      Normal Damage ≥ 36 and Have Any Suit Upgrade
+                      Gravity Suit and Varia Suit and Normal Damage ≥ 18
 
 > Door to Nocturnal Playground; Heals? False
   * Layers: default
@@ -666,19 +675,29 @@ Extra - minimap_coordinates: [{'x': 5, 'y': 4}, {'x': 5, 'y': 5}, {'x': 6, 'y': 
   > Door to X-B.O.X. Arena
       Trivial
   > Door to Spaceboost Alley
-      All of the following:
-          Level 4 Keycard and Screw Attack and Speed Booster and Disabled Door Lock Rando and Disabled Entrance Rando and Can Use Power Bombs
-          Any of the following:
-              # Ice X logic
-              Varia Suit
-              # Tank all the damage - 6 X
-              Damage Boosts (Intermediate) and Normal Damage ≥ 414
-              # Minimum with plasma - 3 X: https://youtu.be/LX5JjYrUV7Y
-              Plasma Beam and Damage Boosts (Advanced) and Cold Damage ≥ 207
-              # Power Bomb also freezes X: https://youtu.be/XpAzo40ONxw
-              Knowledge (Advanced) and Movement (Advanced)
-              # Plasma and Wide can freeze all X and avoid all the damage: https://youtu.be/b0RHhbza3mk
-              Plasma Beam and Wide Beam and Movement (Advanced)
+      Any of the following:
+          All of the following:
+              Level 4 Keycard and Screw Attack and Speed Booster and Disabled Door Lock Rando and Disabled Entrance Rando and Can Use Power Bombs
+              Any of the following:
+                  # Ice X logic
+                  Varia Suit
+                  # Tank all the damage - 6 X
+                  Damage Boosts (Intermediate) and Normal Damage ≥ 414
+                  # Minimum with plasma - 3 X: https://youtu.be/LX5JjYrUV7Y
+                  Plasma Beam and Damage Boosts (Advanced) and Cold Damage ≥ 207
+                  # Power Bomb also freezes X: https://youtu.be/XpAzo40ONxw
+                  Knowledge (Advanced) and Movement (Advanced)
+                  # Plasma and Wide can freeze all X and avoid all the damage: https://youtu.be/b0RHhbza3mk
+                  Plasma Beam and Wide Beam and Movement (Advanced)
+          All of the following:
+              Can Freeze Enemies With Any Weapon
+              Any of the following:
+                  Charge Beam and Clipping (Beginner)
+                  Clipping (Intermediate) and Can Use Any Bombs
+              Any of the following:
+                  Normal Damage ≥ 60
+                  Normal Damage ≥ 36 and Have Any Suit Upgrade
+                  Gravity Suit and Varia Suit and Normal Damage ≥ 18
 
 > Door to X-B.O.X. Arena; Heals? False
   * Layers: default
@@ -1501,6 +1520,12 @@ Hint Features - Pillar
                   Shinespark Tricks (Expert) and Can Use Power Bombs
                   # No DLR needed. Requirements to deal with X are in Forbidden Entrance
                   Disabled Entrance Rando
+              All of the following:
+                  Charge Beam and Level 0 Keycard and Level 4 Keycard and Missiles and Space Jump and Clipping (Beginner) and Shinespark Tricks (Ludicrous) and Disabled Door Lock Rando and Disabled Entrance Rando and Can Use Power Bombs
+                  Any of the following:
+                      Normal Damage ≥ 60
+                      Normal Damage ≥ 36 and Have Any Suit Upgrade
+                      Gravity Suit and Varia Suit and Normal Damage ≥ 18
 
 ----------------
 Spaceboost Alley
